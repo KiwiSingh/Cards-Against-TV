@@ -28,7 +28,7 @@ A local, pass-the-remote party game for Apple TV inspired by *Cards Against Huma
 3. Replace the default app entry point with the provided `Cards_Against_TVApp.swift`.
 4. Set up the app icon using the included image assets:
 
-   * The folder `Assets.xcassets/tvOSAppIcon.imageset` contains the Background and Front layers.
+   * The folder `Assets.xcassets` contains the image assets you're gonna need for getting the app to show up on your Apple TV's homescreen.
    * Background must be opaque; Front must match the slot’s pixel size.
 5. Build and run on an Apple TV simulator or device.
 
