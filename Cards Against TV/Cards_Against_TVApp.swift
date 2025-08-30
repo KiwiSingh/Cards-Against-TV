@@ -316,6 +316,14 @@ struct GameView: View {
     @State private var selectedCards: [Int] = [] // indices
     @State private var showCustomEntry: Bool = false
     @State private var customCardTexts: [String] = [""]
+    @State private var showCardDetail: Bool = false
+    @State private var detailCardText: String = ""
+
+    // NEW: Focus for custom TextFields
+    private enum CustomFieldFocus: Hashable {
+        case field(Int)
+    }
+    @FocusState private var focusedCustomField: CustomFieldFocus?
 
     var body: some View {
         VStack(spacing: 20) {
@@ -337,6 +345,8 @@ struct GameView: View {
                     Text(black.text)
                         .font(.title2)
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)     // PATCH for wrapping
+                        .frame(maxWidth: 900)                             // PATCH for legibility
                 }
             } else {
                 Text("No black card available!").foregroundColor(.red)
@@ -352,96 +362,148 @@ struct GameView: View {
                     let customUses = p.customCardUses
                     Text("Remote holder: \(p.name)")
                     Text("Phase: Select \(pick) card(s) to play (tap in order)")
+                    Text("Hold SELECT button to read a card fully")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
                     ScrollView(.horizontal) {
                         HStack(spacing: 10) {
                             ForEach(Array(game.hands[game.activePlayerIndex].enumerated()), id: \.offset) { idx, whiteCard in
                                 let isSelected = selectedCards.contains(idx) && !showCustomEntry
                                 let indexInSelection = selectedCards.firstIndex(of: idx)
-                                Button(action: {
-                                    // Toggle selection, maintain order, enforce pick limit
-                                    if isSelected {
-                                        selectedCards.removeAll { $0 == idx }
-                                    } else if selectedCards.count < pick {
-                                        selectedCards.append(idx)
-                                        showCustomEntry = false
-                                    }
-                                }) {
-                                    Text("\(indexInSelection != nil ? "\(indexInSelection!+1). " : "")\(whiteCard)")
-                                        .padding()
-                                        .frame(width: 420, height: 200)
-                                        .font(.title3)
-                                        .multilineTextAlignment(.center)
-                                        .background(isSelected && !showCustomEntry ? Color.blue.opacity(0.5) : Color.white)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .stroke(isSelected && !showCustomEntry ? Color.blue : Color.gray, lineWidth: isSelected && !showCustomEntry ? 5 : 1)
-                                        )
-                                        .cornerRadius(8)
-                                }
-                                .buttonStyle(CardButtonStyle())
+                                FocusableCardButton(
+                                    cardText: whiteCard,
+                                    isSelected: isSelected,
+                                    selectionNumber: indexInSelection != nil ? indexInSelection! + 1 : nil,
+                                    onTap: {
+                                        if isSelected {
+                                            selectedCards.removeAll { $0 == idx }
+                                        } else if selectedCards.count < pick {
+                                            selectedCards.append(idx)
+                                            showCustomEntry = false
+                                        }
+                                    },
+                                    onLongPress: {
+                                        detailCardText = whiteCard
+                                        showCardDetail = true
+                                    },
+                                    focusEnabled: !showCustomEntry
+                                )
                             }
                             if customUses + pick <= game.maxCustomPerPlayer {
-                                Button(action: {
-                                    showCustomEntry = true
-                                    selectedCards = []
-                                    if customCardTexts.count != pick {
-                                        customCardTexts = Array(repeating: "", count: pick)
-                                    }
-                                }) {
-                                    VStack {
-                                        Image(systemName: "plus.rectangle.on.rectangle")
-                                            .font(.largeTitle)
-                                        Text("Write Custom \(pick>1 ? "Cards" : "Card")")
-                                            .padding(.top, 6)
-                                    }
-                                    .frame(width: 420, height: 200)
-                                    .background(showCustomEntry ? Color.blue.opacity(0.5) : Color.white)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(showCustomEntry ? Color.blue : Color.gray, lineWidth: showCustomEntry ? 5 : 1)
-                                    )
-                                    .cornerRadius(8)
-                                }
-                                .buttonStyle(CardButtonStyle())
+                                FocusableCustomButton(
+                                    isSelected: showCustomEntry,
+                                    pick: pick,
+                                    onTap: {
+                                        showCustomEntry = true
+                                        selectedCards = []
+                                        if customCardTexts.count != pick {
+                                            customCardTexts = Array(repeating: "", count: pick)
+                                        }
+                                        focusedCustomField = .field(0)
+                                    },
+                                    focusEnabled: !showCustomEntry
+                                )
                             }
                         }
                         .padding()
                     }
+                    .disabled(showCustomEntry)
+
+                    // --- PATCH for explicit submit ---
                     if showCustomEntry {
                         VStack(spacing: 8) {
                             Text("Enter \(pick) custom answer\(pick > 1 ? "s" : "") (up to 20/plyr per game)").font(.subheadline)
                             ForEach(0..<pick, id: \.self) { idx in
-                                TextField("Custom answer #\(idx+1)...", text: Binding(get: {
-                                    if customCardTexts.indices.contains(idx) { return customCardTexts[idx] } else { return "" }
-                                }, set: { v in
-                                    if customCardTexts.indices.contains(idx) { customCardTexts[idx] = v }
-                                }))
-                                    .frame(width: 420)
-                                    .padding(8)
-                                    .background(Color.white)
-                                    .cornerRadius(8)
+                                TextField("Custom answer #\(idx+1)...",
+                                          text: Binding(
+                                            get: { customCardTexts.indices.contains(idx) ? customCardTexts[idx] : "" },
+                                            set: { v in if customCardTexts.indices.contains(idx) { customCardTexts[idx] = v } }
+                                          )
+                                )
+                                .textInputAutocapitalization(.sentences)
+                                .disableAutocorrection(false)
+                                .frame(width: 420)
+                                .padding(8)
+                                .background(Color.white)
+                                .cornerRadius(8)
+                                .focused($focusedCustomField, equals: .field(idx))
+                                .submitLabel(idx < pick - 1 ? .next : .done)
+                                .onSubmit {
+                                    if idx < pick - 1 {
+                                        focusedCustomField = .field(idx + 1)
+                                    } else {
+                                        focusedCustomField = .field(idx) // JUST stay here, do NOT auto-submit!
+                                    }
+                                }
                             }
-                            Button("Submit Custom Card(s)") {
+                            Button {
                                 let values = customCardTexts.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                                 if values.allSatisfy({ !$0.isEmpty }) {
                                     game.submitCustomCard(playerIndex: game.activePlayerIndex, texts: values)
                                     customCardTexts = Array(repeating: "", count: pick)
                                     showCustomEntry = false
                                     selectedCards = []
+                                    focusedCustomField = nil
                                 }
+                            } label: {
+                                Text("Submit Custom Card\(pick > 1 ? "s" : "")")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 12)
+                                    .frame(maxWidth: 420)
+                                    .background(customCardTexts.allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) ? Color.blue : Color.gray)
+                                    .cornerRadius(10)
                             }
-                            .disabled(customCardTexts.contains(where: { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }))
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.plain)
+                            .disabled(!customCardTexts.allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }))
+                        }
+                        .onAppear {
+                            focusedCustomField = .field(0)
+                        }
+                        .onChange(of: showCustomEntry) { newValue in
+                            if newValue {
+                                let p = max(1, game.currentBlack?.pick ?? 1)
+                                if customCardTexts.count != p {
+                                    customCardTexts = Array(repeating: "", count: p)
+                                }
+                                focusedCustomField = .field(0)
+                            } else {
+                                focusedCustomField = nil
+                            }
+                        }
+                        .onChange(of: game.currentBlack?.pick) { _ in
+                            if showCustomEntry {
+                                let p = max(1, game.currentBlack?.pick ?? 1)
+                                if customCardTexts.count != p {
+                                    customCardTexts = Array(repeating: "", count: p)
+                                }
+                                focusedCustomField = .field(min(0, pick-1))
+                            }
                         }
                     } else {
-                        Button("Submit Card\(pick > 1 ? "s" : "")") {
-                            if !selectedCards.isEmpty && selectedCards.count == pick {
-                                game.submitCard(playerIndex: game.activePlayerIndex, cardIndicesInHand: selectedCards)
-                                selectedCards = []
+                        VStack(spacing: 12) {
+                            Text("Selected: \(selectedCards.count)/\(pick) cards")
+                                .foregroundColor(.secondary)
+                            Button {
+                                if !selectedCards.isEmpty && selectedCards.count == pick {
+                                    game.submitCard(playerIndex: game.activePlayerIndex, cardIndicesInHand: selectedCards)
+                                    selectedCards = []
+                                    showCustomEntry = false
+                                }
+                            } label: {
+                                Text("Submit Card\(pick > 1 ? "s" : "") (\(selectedCards.count)/\(pick))")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 12)
+                                    .background(selectedCards.count == pick ? Color.blue : Color.gray)
+                                    .cornerRadius(10)
                             }
+                            .buttonStyle(.plain)
+                            .disabled(selectedCards.count != pick)
                         }
-                        .disabled(selectedCards.count != pick)
-                        .buttonStyle(.borderedProminent)
                     }
                 } else {
                     Text("No valid player/hand for this round.")
@@ -454,6 +516,10 @@ struct GameView: View {
                     Text("Remote holder: (invalid judge index)")
                 }
                 Text("Phase: Judge the submissions")
+                Text("Hold SELECT button to read a submission fully")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
                 VStack(spacing: 8) {
                     Text("Submissions (anonymized)")
                     // PATCH: explicit shuffled mapping
@@ -468,39 +534,39 @@ struct GameView: View {
                     ScrollView(.horizontal) {
                         HStack(spacing: 12) {
                             ForEach(submissionViewModels, id: \.viewIdx) { model in
-                                Button(action: {
-                                    selectedSubmission = model.viewIdx
-                                }) {
-                                    VStack {
-                                        ForEach(0..<model.submission.cards.count, id: \.self) { j in
-                                            Text(model.submission.cards[j])
-                                                .font(.title3)
-                                        }
+                                FocusableSubmissionButton(
+                                    cards: model.submission.cards,
+                                    isSelected: selectedSubmission == model.viewIdx,
+                                    onTap: {
+                                        selectedSubmission = model.viewIdx
+                                    },
+                                    onLongPress: {
+                                        detailCardText = model.submission.cards.joined(separator: "\n\n")
+                                        showCardDetail = true
                                     }
-                                    .frame(width: 420, height: CGFloat(140 + model.submission.cards.count * 20))
-                                    .multilineTextAlignment(.center)
-                                    .background(selectedSubmission == model.viewIdx ? Color.green.opacity(0.5) : Color.white)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(selectedSubmission == model.viewIdx ? Color.green : Color.gray, lineWidth: selectedSubmission == model.viewIdx ? 5 : 1)
-                                    )
-                                    .cornerRadius(8)
-                                }
-                                .buttonStyle(CardButtonStyle())
+                                )
                             }
                         }
                         .padding()
                     }
-                    Button("Judge: Pick Winner") {
+                    Button {
                         if let s = selectedSubmission {
                             // Map from shuffled slot back to actual array
                             let actual = submissionViewModels[s].actualIdx
                             game.pickWinner(submissionIndex: actual)
                             selectedSubmission = nil
                         }
+                    } label: {
+                        Text("Judge: Pick Winner")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(selectedSubmission != nil ? Color.green : Color.gray)
+                            .cornerRadius(10)
                     }
+                    .buttonStyle(.plain)
                     .disabled(selectedSubmission == nil)
-                    .buttonStyle(.borderedProminent)
                 }
             case .showWinner:
                 Text("Winner chosen!")
@@ -536,8 +602,261 @@ struct GameView: View {
             }
         }
         .padding()
+        .sheet(isPresented: $showCardDetail) {
+            CardDetailView(cardText: detailCardText)
+        }
     }
 }
+
+// MARK: - New Focusable Components
+
+struct FocusableCardButton: View {
+    let cardText: String
+    let isSelected: Bool
+    let selectionNumber: Int?
+    let onTap: () -> Void
+    let onLongPress: () -> Void
+    let focusEnabled: Bool
+
+    @FocusState private var isFocused: Bool
+    @State private var isPressed = false
+
+    var body: some View {
+        Text("\(selectionNumber != nil ? "\(selectionNumber!). " : "")\(cardText)")
+            .padding()
+            .frame(width: 420, height: 200)
+            .font(.title3)
+            .multilineTextAlignment(.center)
+            .foregroundColor(.black)
+            .background(backgroundColorForState)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(borderColorForState, lineWidth: borderWidthForState)
+            )
+            .cornerRadius(8)
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .focusable(focusEnabled)
+            .focused($isFocused)
+            .onTapGesture {
+                onTap()
+            }
+            .onLongPressGesture(minimumDuration: 0.5) {
+                onLongPress()
+            } onPressingChanged: { pressing in
+                withAnimation(.easeInOut(duration: 0.1)) {
+                    isPressed = pressing
+                }
+            }
+    }
+
+    private var backgroundColorForState: Color {
+        if isSelected {
+            return Color.blue.opacity(0.5)
+        } else if isFocused {
+            return Color.gray.opacity(0.3)
+        } else {
+            return Color.white
+        }
+    }
+
+    private var borderColorForState: Color {
+        if isSelected {
+            return Color.blue
+        } else if isFocused {
+            return Color.blue.opacity(0.7)
+        } else {
+            return Color.gray
+        }
+    }
+
+    private var borderWidthForState: CGFloat {
+        if isSelected {
+            return 5
+        } else if isFocused {
+            return 3
+        } else {
+            return 1
+        }
+    }
+}
+
+struct FocusableCustomButton: View {
+    let isSelected: Bool
+    let pick: Int
+    let onTap: () -> Void
+    let focusEnabled: Bool
+
+    @FocusState private var isFocused: Bool
+    @State private var isPressed = false
+
+    var body: some View {
+        VStack {
+            Image(systemName: "plus.rectangle.on.rectangle")
+                .font(.largeTitle)
+            Text("Write Custom \(pick > 1 ? "Cards" : "Card")")
+                .padding(.top, 6)
+        }
+        .frame(width: 420, height: 200)
+        .background(backgroundColorForState)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(borderColorForState, lineWidth: borderWidthForState)
+        )
+        .cornerRadius(8)
+        .scaleEffect(isPressed ? 0.95 : 1.0)
+        .focusable(focusEnabled)
+        .focused($isFocused)
+        .onTapGesture {
+            onTap()
+        }
+        .onLongPressGesture(minimumDuration: 0.1) { } onPressingChanged: { pressing in
+            withAnimation(.easeInOut(duration: 0.1)) {
+                isPressed = pressing
+            }
+        }
+    }
+
+    private var backgroundColorForState: Color {
+        if isSelected {
+            return Color.blue.opacity(0.5)
+        } else if isFocused {
+            return Color.gray.opacity(0.3)
+        } else {
+            return Color.white
+        }
+    }
+
+    private var borderColorForState: Color {
+        if isSelected {
+            return Color.blue
+        } else if isFocused {
+            return Color.blue.opacity(0.7)
+        } else {
+            return Color.gray
+        }
+    }
+
+    private var borderWidthForState: CGFloat {
+        if isSelected {
+            return 5
+        } else if isFocused {
+            return 3
+        } else {
+            return 1
+        }
+    }
+}
+
+struct FocusableSubmissionButton: View {
+    let cards: [String]
+    let isSelected: Bool
+    let onTap: () -> Void
+    let onLongPress: () -> Void
+
+    @FocusState private var isFocused: Bool
+    @State private var isPressed = false
+
+    var body: some View {
+        VStack {
+            ForEach(0..<cards.count, id: \.self) { j in
+                Text(cards[j])
+                    .font(.title3)
+            }
+        }
+        .frame(width: 420, height: CGFloat(140 + cards.count * 20))
+        .multilineTextAlignment(.center)
+        .foregroundColor(.black)
+        .background(backgroundColorForState)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(borderColorForState, lineWidth: borderWidthForState)
+        )
+        .cornerRadius(8)
+        .scaleEffect(isPressed ? 0.95 : 1.0)
+        .focusable()
+        .focused($isFocused)
+        .onTapGesture {
+            onTap()
+        }
+        .onLongPressGesture(minimumDuration: 0.5) {
+            onLongPress()
+        } onPressingChanged: { pressing in
+            withAnimation(.easeInOut(duration: 0.1)) {
+                isPressed = pressing
+            }
+        }
+    }
+
+    private var backgroundColorForState: Color {
+        if isSelected {
+            return Color.green.opacity(0.5)
+        } else if isFocused {
+            return Color.gray.opacity(0.3)
+        } else {
+            return Color.white
+        }
+    }
+
+    private var borderColorForState: Color {
+        if isSelected {
+            return Color.green
+        } else if isFocused {
+            return Color.blue.opacity(0.7)
+        } else {
+            return Color.gray
+        }
+    }
+
+    private var borderWidthForState: CGFloat {
+        if isSelected {
+            return 5
+        } else if isFocused {
+            return 3
+        } else {
+            return 1
+        }
+    }
+}
+
+struct CardDetailView: View {
+    let cardText: String
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 30) {
+            Text("Card Details")
+                .font(.largeTitle)
+                .foregroundColor(.white)
+                .padding(.top, 40)
+
+            ScrollView {
+                Text(cardText)
+                    .font(.title2)
+                    .foregroundColor(.black)
+                    .multilineTextAlignment(.center)
+                    .padding(40)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.white)
+                    .cornerRadius(12)
+                    .shadow(radius: 5)
+            }
+            .frame(maxHeight: 400)
+
+            Button("Close") {
+                dismiss()
+            }
+            .font(.title2)
+            .buttonStyle(.borderedProminent)
+            .focusable()
+            .padding(.bottom, 40)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.opacity(0.9))
+        .ignoresSafeArea()
+    }
+}
+
 struct CardButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
