@@ -5,7 +5,32 @@ import Combine
 struct CompactDeck: Codable {
     let white: [String]
     let black: [CompactBlack]
+    let name: String? // Add deck name for display
+    let id: String?   // Add deck ID for identification
+    
+    // Add CodingKeys to handle the existing JSON format
+    private enum CodingKeys: String, CodingKey {
+        case white, black
+    }
+    
+    // Custom initializer to maintain compatibility
+    init(white: [String], black: [CompactBlack], name: String? = nil, id: String? = nil) {
+        self.white = white
+        self.black = black
+        self.name = name
+        self.id = id
+    }
+    
+    // Custom decoder to maintain compatibility with existing JSON
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.white = try container.decode([String].self, forKey: .white)
+        self.black = try container.decode([CompactBlack].self, forKey: .black)
+        self.name = nil
+        self.id = nil
+    }
 }
+
 struct CompactBlack: Codable, Identifiable {
     var id = UUID()
     let text: String
@@ -36,12 +61,48 @@ extension Collection {
     }
 }
 
-// ---------- Deck Loader -----------
-class DeckLoader: ObservableObject {
-    @Published var deck: CompactDeck? = nil
-    @Published var errorMessage: String? = nil
+// First, let's properly understand the JSON structure by examining what we have
+struct DeckCollection: Codable {
+    let decks: [NamedDeck]?
+    let white: [String]? // Fallback for single deck format
+    let black: [CompactBlack]? // Fallback for single deck format
+}
 
-    func loadLocal() {
+// Simplify the NamedDeck struct
+struct NamedDeck: Identifiable, Codable {
+    var id = UUID()
+    let name: String
+    let white: [String]
+    let black: [CompactBlack]
+    let description: String?
+    let official: Bool?
+}
+
+// Update the data structures to match the actual JSON format
+struct DeckPack: Identifiable, Codable {
+    var id = UUID()
+    let name: String
+    let white: [Int] // Indices into the main white cards array
+    let black: [Int] // Indices into the main black cards array
+    let official: Bool?
+    
+    enum CodingKeys: String, CodingKey {
+        case name, white, black, official
+    }
+}
+
+// Update the DeckLoader to work with the actual JSON structure
+class DeckLoader: ObservableObject {
+    @Published var deck: CompactDeck? = nil // Combined deck for the game
+    @Published var allWhiteCards: [String] = [] // All white cards from main array
+    @Published var allBlackCards: [CompactBlack] = [] // All black cards from main array
+    @Published var packs: [DeckPack] = [] // Available packs/decks
+    @Published var selectedPackIds: Set<UUID> = [] // Track which packs are selected
+    @Published var errorMessage: String? = nil
+    @Published var isLoading = false
+
+    // Load the collection of decks/packs
+    func loadDeckCollection() {
         guard let url = Bundle.main.url(forResource: "cah-all-compact", withExtension: "json") else {
             errorMessage = "Deck file not found in bundle."
             return
@@ -49,12 +110,111 @@ class DeckLoader: ObservableObject {
         do {
             let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
-            let d = try decoder.decode(CompactDeck.self, from: data)
-            deck = d
+            
+            // Parse the JSON structure
+            let jsonObject = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            
+            // Load main white cards array
+            if let whiteArray = jsonObject?["white"] as? [String] {
+                self.allWhiteCards = whiteArray
+            }
+            
+            // Load main black cards array
+            if let blackArray = jsonObject?["black"] as? [[String: Any]] {
+                var compactBlacks: [CompactBlack] = []
+                for blackDict in blackArray {
+                    if let text = blackDict["text"] as? String,
+                       let pick = blackDict["pick"] as? Int {
+                        let black = CompactBlack(text: text, pick: pick)
+                        compactBlacks.append(black)
+                    }
+                }
+                self.allBlackCards = compactBlacks
+            }
+            
+            // Load packs
+            if let packsArray = jsonObject?["packs"] as? [[String: Any]] {
+                var deckPacks: [DeckPack] = []
+                for packDict in packsArray {
+                    if let name = packDict["name"] as? String,
+                       let whiteIndices = packDict["white"] as? [Int],
+                       let blackIndices = packDict["black"] as? [Int] {
+                        
+                        let official = packDict["official"] as? Bool
+                        
+                        let pack = DeckPack(
+                            name: name,
+                            white: whiteIndices,
+                            black: blackIndices,
+                            official: official
+                        )
+                        deckPacks.append(pack)
+                    }
+                }
+                self.packs = deckPacks
+                
+                // Select all packs by default
+                self.selectedPackIds = Set(deckPacks.map { $0.id })
+            }
+            
+            // Create initial combined deck
+            createCombinedDeck()
             errorMessage = nil
         } catch {
-            errorMessage = "Failed to load deck: \(error.localizedDescription)"
+            errorMessage = "Failed to load deck collection: \(error.localizedDescription)"
         }
+    }
+    
+    // Keep the original method for backward compatibility
+    func loadLocal() {
+        loadDeckCollection()
+    }
+    
+    // Select/deselect a pack
+    func togglePackSelection(_ packId: UUID) {
+        if selectedPackIds.contains(packId) {
+            selectedPackIds.remove(packId)
+        } else {
+            selectedPackIds.insert(packId)
+        }
+        createCombinedDeck()
+    }
+    
+    // Create a combined deck from selected packs
+    private func createCombinedDeck() {
+        var combinedWhiteIndices: Set<Int> = [] // Use Set to avoid duplicates
+        var combinedBlackIndices: Set<Int> = []
+        
+        // Collect indices from selected packs
+        for pack in packs where selectedPackIds.contains(pack.id) {
+            combinedWhiteIndices.formUnion(pack.white)
+            combinedBlackIndices.formUnion(pack.black)
+        }
+        
+        // Map indices to actual cards
+        var combinedWhite: [String] = []
+        var combinedBlack: [CompactBlack] = []
+        
+        for index in combinedWhiteIndices.sorted() {
+            if index < allWhiteCards.count {
+                combinedWhite.append(allWhiteCards[index])
+            }
+        }
+        
+        for index in combinedBlackIndices.sorted() {
+            if index < allBlackCards.count {
+                combinedBlack.append(allBlackCards[index])
+            }
+        }
+        
+        // Create combined deck
+        let combinedDeck = CompactDeck(
+            white: combinedWhite,
+            black: combinedBlack,
+            name: "Selected Decks",
+            id: "combined"
+        )
+        self.deck = combinedDeck
     }
 }
 
@@ -234,6 +394,7 @@ struct RootView: View {
     @State private var nameInputs: [String] = []
     @State private var currentNameIndex: Int = 0
     @State private var showSetup = true
+    @State private var showDeckSelection = true // Start with deck selection
 
     let minPlayers = 3, maxPlayers = 8
 
@@ -248,10 +409,83 @@ struct RootView: View {
                 if let gameerr = game.error {
                     Text("Game error: \(gameerr)").foregroundColor(.red)
                 }
-                if loader.deck == nil {
-                    Text("Loading deck...")
+                
+                if loader.packs.isEmpty && loader.allWhiteCards.isEmpty {
+                    Text("Loading decks...")
+                        .onAppear {
+                            if loader.packs.isEmpty && loader.allWhiteCards.isEmpty {
+                                loader.loadDeckCollection()
+                            }
+                        }
+                } else if showDeckSelection {
+                    // Deck Selection Screen
+                    VStack(spacing: 20) {
+                        Text("Select Decks")
+                            .font(.title)
+                        
+                        Text("Choose which decks to include in the game")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        ScrollView {
+                            LazyVStack(spacing: 15) {
+                                ForEach(loader.packs) { pack in
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 5) {
+                                            Text(pack.name)
+                                                .font(.title3)
+                                            HStack {
+                                                Text("\(pack.white.count) White Cards")
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                                Text("•")
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                                Text("\(pack.black.count) Black Cards")
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                        Spacer()
+                                        Button(action: {
+                                            loader.togglePackSelection(pack.id)
+                                        }) {
+                                            Image(systemName: loader.selectedPackIds.contains(pack.id) ? "checkmark.circle.fill" : "circle")
+                                                .font(.title2)
+                                                .foregroundColor(loader.selectedPackIds.contains(pack.id) ? .green : .gray)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                    .padding()
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.gray.opacity(0.2))
+                                    )
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        
+                        Button("Continue") {
+                            if !loader.selectedPackIds.isEmpty {
+                                showDeckSelection = false
+                                showSetup = true
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(loader.selectedPackIds.isEmpty)
+                    }
                 } else if showSetup {
                     VStack(spacing: 20) {
+                        // Add a button to go back to deck selection
+                        HStack {
+                            Button("Select Decks") {
+                                showDeckSelection = true
+                            }
+                            .buttonStyle(.bordered)
+                            Spacer()
+                        }
+                        
                         if !askNames {
                             HStack(spacing: 20) {
                                 Text("Number of players:")
@@ -306,6 +540,11 @@ struct RootView: View {
                 }
             }
             .padding()
+            .onAppear {
+                if loader.packs.isEmpty && loader.allWhiteCards.isEmpty {
+                    loader.loadDeckCollection()
+                }
+            }
         }
     }
 }
@@ -791,7 +1030,7 @@ struct FocusableSubmissionButton: View {
         if isSelected {
             return Color.green.opacity(0.5)
         } else if isFocused {
-            return Color.gray.opacity(0.3)
+            return Color.gray.opacity(0.2)
         } else {
             return Color.white
         }
@@ -923,7 +1162,7 @@ struct StyledCard: View {
                             gradient: Gradient(colors: [
                                 Color.black.opacity(0.95),
                                 Color.black,
-                                Color.black.opacity(0.95)
+                                Color.black.opacity(0.15)
                             ]),
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
