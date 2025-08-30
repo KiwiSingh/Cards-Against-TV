@@ -58,9 +58,10 @@ The deck file uses a simple format:
 * `black` contains prompt cards with text and a pick value.
 
 ## Screenshots
-![img](https://i.ibb.co/B5C6JS7P/Screenshot-2025-08-30-at-01-35-10-41-E5-E6-EE-338-D-44-D7-A422-7-DD76-F599-D14.png)
-![img](https://i.ibb.co/9HZ56h19/Screenshot-2025-08-30-at-01-36-27-4-B286-E34-D692-42-E3-8-D16-AE1390-B6-FA84.png)
-![img](https://i.ibb.co/vxrDGjdt/Screenshot-2025-08-30-at-01-40-17-936908-A7-CA79-46-A3-9321-3-EA63-A99525-B.png)
+![Screenshot 1](https://i.ibb.co/mrWr0Cjp/Screenshot-2025-08-30-at-19-39-21.png)
+![Screenshot 2](https://i.ibb.co/kszCDg9p/Screenshot-2025-08-30-at-19-42-01.png)
+![Screenshot 3](https://i.ibb.co/xqPN6ZQR/Screenshot-2025-08-30-at-19-46-59.png)
+![Screenshot 4](https://i.ibb.co/chR89fw6/Screenshot-2025-08-30-at-19-51-45.png)
 
 ## To-do
 - Add animations
