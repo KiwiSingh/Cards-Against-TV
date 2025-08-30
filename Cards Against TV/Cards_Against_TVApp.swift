@@ -865,3 +865,123 @@ struct CardButtonStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.8 : 1.0)
     }
 }
+
+struct StyledCard: View {
+    let text: String
+    let isBlack: Bool
+    let isSelected: Bool
+    let isFocused: Bool
+    let isFlipped: Bool
+
+    var body: some View {
+        ZStack {
+            // Card background - authentic CAH styling
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isBlack ? Color.black : Color.white)
+                .shadow(color: .black.opacity(isBlack ? 0.4 : 0.2), radius: 8, x: 0, y: 4)
+            
+            // Enhanced card border
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(
+                    isSelected ? (isBlack ? Color.yellow : Color.blue) :
+                    isFocused ? Color.red :
+                    Color.gray.opacity(0.6),
+                    lineWidth: isSelected ? 4 : isFocused ? 3 : 2
+                )
+            
+            // Main content with better layout
+            VStack(spacing: 12) {
+                // Card text - improved styling
+                Text(text)
+                    .font(.system(size: 26, weight: isBlack ? .heavy : .bold, design: .default))
+                    .foregroundColor(isBlack ? .white : .black)
+                    .lineLimit(nil)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+                    .minimumScaleFactor(0.5)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                
+                // Consistent footer on all cards - making sure it's visible
+                HStack {
+                    Spacer()
+                    Text("CARDS AGAINST TV")
+                        .font(.caption2.bold())
+                        .foregroundColor(isBlack ? .white.opacity(0.7) : .black.opacity(0.6))
+                        .padding(.trailing, 16)
+                        .padding(.bottom, 12)
+                }
+            }
+            .padding(.vertical, 20)
+            .padding(.horizontal, 12)
+            
+            // Decorative elements for authentic CAH look
+            if isBlack {
+                // Texture for black cards
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color.black.opacity(0.95),
+                                Color.black,
+                                Color.black.opacity(0.95)
+                            ]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .blendMode(.overlay)
+                
+                // Corner element for black cards
+                HStack {
+                    VStack {
+                        Circle()
+                            .fill(Color.white.opacity(0.1))
+                            .frame(width: 8, height: 8)
+                            .padding(.top, 16)
+                            .padding(.leading, 16)
+                        Spacer()
+                    }
+                    Spacer()
+                }
+            } else {
+                // Texture for white cards
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color.white.opacity(0.95),
+                                Color.white,
+                                Color.white.opacity(0.95)
+                            ]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .blendMode(.overlay)
+                
+                // Corner element for white cards
+                HStack {
+                    VStack {
+                        Circle()
+                            .fill(Color.black.opacity(0.05))
+                            .frame(width: 8, height: 8)
+                            .padding(.top, 16)
+                            .padding(.leading, 16)
+                        Spacer()
+                    }
+                    Spacer()
+                }
+            }
+        }
+        .frame(width: 420, height: 200)
+        .rotation3DEffect(.degrees(isFlipped ? 180 : 0), axis: (x:0, y:1, z:0))
+        .scaleEffect((isSelected || isFocused) ? 1.06 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isSelected || isFocused)
+        .animation(.spring(), value: isFlipped)
+        .animation(.spring(response: 0.45, dampingFraction: 0.72), value: text)
+        .transition(.asymmetric(
+            insertion: .move(edge: .bottom).combined(with: .opacity),
+            removal: .scale.combined(with: .opacity))
+        )
+    }
+}
