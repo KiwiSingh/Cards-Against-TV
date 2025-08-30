@@ -65,7 +65,7 @@ The deck file uses a simple format:
 
 ## To-do
 - Add animations
-- Make card text smaller
+- ~~Make card text smaller~~
 - Add deck selector (idk if this is doable though)
 
 
