@@ -34,6 +34,7 @@ A local, pass-the-remote party game for Apple TV inspired by *Cards Against Huma
 
 ## How to Play
 
+* Choose the decks to play the game with. By default, all decks are selected.
 * Choose the number of players and enter names one by one.
 * Each round presents a black prompt card with a “pick” value. Non-judging players submit answers in turn.
 * When multiple cards are required, players select them in order or enter custom responses.
@@ -58,15 +59,20 @@ The deck file uses a simple format:
 * `black` contains prompt cards with text and a pick value.
 
 ## Screenshots
-![Screenshot 1](https://i.ibb.co/mrWr0Cjp/Screenshot-2025-08-30-at-19-39-21.png)
-![Screenshot 2](https://i.ibb.co/kszCDg9p/Screenshot-2025-08-30-at-19-42-01.png)
-![Screenshot 3](https://i.ibb.co/xqPN6ZQR/Screenshot-2025-08-30-at-19-46-59.png)
-![Screenshot 4](https://i.ibb.co/chR89fw6/Screenshot-2025-08-30-at-19-51-45.png)
+![Screenshot 1](https://i.ibb.co/9k6LrMLS/Screenshot-2025-08-31-at-02-26-14.png)
+![Screenshot 2](https://i.ibb.co/G687gZR/Screenshot-2025-08-31-at-02-27-24.png)
+![Screenshot 3](https://i.ibb.co/8gWHHWjS/Screenshot-2025-08-31-at-02-27-09.png)
+![Screenshot 4](https://i.ibb.co/fG4SqTs5/Screenshot-2025-08-31-at-02-27-54.png)
+![Screenshot 5](https://i.ibb.co/tpK9PB6n/Screenshot-2025-08-31-at-02-28-18.png)
+![Screenshot 6](https://i.ibb.co/Xx8zmNCs/Screenshot-2025-08-31-at-02-32-40.png)
+
 
 ## To-do
 - Add animations
+
 - ~~Make card text smaller~~
-- Add deck selector (idk if this is doable though)
+
+✅ Add deck selector ~~(idk if this is doable though)~~
 
 
 ## Troubleshooting
