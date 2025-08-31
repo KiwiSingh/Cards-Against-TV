@@ -79,7 +79,7 @@ The deck file uses a simple format:
 
 ## Screenshots (tvOS)
 ![Screenshot 1](https://i.ibb.co/9k6LrMLS/Screenshot-2025-08-31-at-02-26-14.png)
-![Screenshot 2](https://i.ibb.co/8LypkcFg/Screenshot-20250901-003328.png)
+![Screenshot 2](https://i.ibb.co/G687gZR/Screenshot-2025-08-31-at-02-27-24.png)
 ![Screenshot 3](https://i.ibb.co/8gWHHWjS/Screenshot-2025-08-31-at-02-27-09.png)
 ![Screenshot 4](https://i.ibb.co/fG4SqTs5/Screenshot-2025-08-31-at-02-27-54.png)
 ![Screenshot 5](https://i.ibb.co/tpK9PB6n/Screenshot-2025-08-31-at-02-28-18.png)
@@ -87,7 +87,7 @@ The deck file uses a simple format:
 
 ## Screenshots (Android TV)
 ![Screenshot 1](https://i.ibb.co/gLYP50mn/Screenshot-20250901-001742.png)
-![Screenshot 2](https://i.ibb.co/s9qGWwvC/Screenshot-20250901-001910.png)
+![Screenshot 2](https://i.ibb.co/sdTG7HL9/Screenshot-20250901-003328.png)
 ![Screenshot 3](https://i.ibb.co/chTDYzXy/Screenshot-20250901-002015.png)
 ![Screenshot 4](https://i.ibb.co/Rp31v0pC/Screenshot-20250901-002105.png)
 ![Screenshot 5](https://i.ibb.co/QjqRRTp6/Screenshot-20250901-003049.png)
