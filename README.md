@@ -1,10 +1,10 @@
-# Cards Against TV (tvOS)
+# Cards Against TV
 <p align="center">
   <img src="https://i.ibb.co/BJLF6y5/catv.png" alt="Cards Against TV Logo">
 </p>
 
 
-A local, pass-the-remote party game for Apple TV inspired by *Cards Against Humanity*. Built with SwiftUI for tvOS, the game features multi-card prompts, per-turn custom answers, rotating judges, and a first-to-5 win condition.
+A local, pass-the-remote party game for Apple TV and Android, inspired by *Cards Against Humanity*. Built with SwiftUI for tvOS, and rewritten in Kotlin for Android, the game features multi-card prompts, per-turn custom answers, rotating judges, and a first-to-5 win condition.
 
 ## Features
 
@@ -14,14 +14,20 @@ A local, pass-the-remote party game for Apple TV inspired by *Cards Against Huma
 * Clear visual highlights for active players and judges.
 * Rotating judge each round; the first player to reach 5 points wins.
 
-## Requirements
+## Requirements (tvOS)
 
 * tvOS 15 or later (officially tested only on tvOS 26)
 * Xcode 15 or later
 * Swift 5.7 or later
 * Deck JSON included in the app bundle as `cah-all-compact.json`. You can find the source [here](https://github.com/crhallberg/json-against-humanity/blob/latest/cah-all-compact.json).
 
-## Setup
+## Requirements (Android)
+* Android 10 or later
+* A working brain
+
+## Setup (tvOS)
+
+### From source
 
 1. Create a new tvOS SwiftUI app in Xcode.
 2. Download `cah-all-compact.json` and add it to your project (ensure “Copy items if needed” and target membership are checked).
@@ -31,6 +37,19 @@ A local, pass-the-remote party game for Apple TV inspired by *Cards Against Huma
    * The folder `Assets.xcassets` contains the image assets you're gonna need for getting the app to show up on your Apple TV's homescreen.
    * Background must be opaque; Front must match the slot’s pixel size.
 5. Build and run on an Apple TV simulator or device.
+
+### From IPA
+1. Make sure Sideloadly is paired with your Apple TV device
+2. Drag the IPA into Sideloadly
+3. Sign and install
+4. Enjoy!
+
+
+## Setup (Android)
+1. Enable installing from unknown sources
+2. Download the APK
+3. Install the APK
+4. If prompted by Play Protect, hit "Install without scanning"
 
 ## How to Play
 
@@ -58,7 +77,7 @@ The deck file uses a simple format:
 * `white` contains the answer cards.
 * `black` contains prompt cards with text and a pick value.
 
-## Screenshots
+## Screenshots (tvOS)
 ![Screenshot 1](https://i.ibb.co/9k6LrMLS/Screenshot-2025-08-31-at-02-26-14.png)
 ![Screenshot 2](https://i.ibb.co/G687gZR/Screenshot-2025-08-31-at-02-27-24.png)
 ![Screenshot 3](https://i.ibb.co/8gWHHWjS/Screenshot-2025-08-31-at-02-27-09.png)
