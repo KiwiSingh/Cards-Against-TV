@@ -8,7 +8,8 @@ A local, pass-the-remote party game for Apple TV and Android, inspired by *Cards
 
 ## Features
 
-* Local multiplayer with pass-the-remote gameplay on Apple TV.
+* Local multiplayer with pass-the-remote gameplay on Apple TV and Android TV.
+* Local multiplayer with pass-the-device gameplay on Android phones and tablets.
 * Multi-card prompts: play 1–N answers when the black card’s pick value is greater than 1.
 * In-round custom answers: players can add up to 20 custom cards per game.
 * Clear visual highlights for active players and judges.
@@ -50,6 +51,7 @@ A local, pass-the-remote party game for Apple TV and Android, inspired by *Cards
 2. Download the APK
 3. Install the APK
 4. If prompted by Play Protect, hit "Install without scanning"
+5. Enjoy!
 
 ## How to Play
 
