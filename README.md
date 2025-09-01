@@ -116,7 +116,21 @@ The deck file uses a simple format:
 ![Screenshot 5](https://i.ibb.co/QjqRRTp6/Screenshot-20250901-003049.png)
 ![Screenshot 6](https://i.ibb.co/C535r3jm/Screenshot-20250901-002406.png)
 
+## Screenshots (iOS)
+![Screenshot 1](https://i.ibb.co/SwPnTrHN/IMG-3197.png)
+![Screenshot 2](https://i.ibb.co/7xwVPXH5/IMG-3198.png)
+![Screenshot 3](https://i.ibb.co/q24rHVF/IMG-3199.png)
+![Screenshot 4](https://i.ibb.co/1JXbVVJL/IMG-3200.png)
+![Screenshot 5](https://i.ibb.co/h1wkcgCx/IMG-3201.png)
+![Screenshot 6](https://i.ibb.co/KH4MnW4/IMG-3202.png)
 
+## Screenshots (Android)
+![Screenshot 1](https://i.ibb.co/hNRRCqY/Screenshot-20250902-010117.png)
+![Screenshot 2](https://i.ibb.co/1fyGPQNg/Screenshot-20250902-010732.png)
+![Screenshot 3](https://i.ibb.co/FLdSNZBv/Screenshot-20250902-010802.png)
+![Screenshot 4](https://i.ibb.co/23czZcX5/Screenshot-20250902-010832.png)
+![Screenshot 5](https://i.ibb.co/LyPCTj3/Screenshot-20250902-011221.png)
+![Screenshot 6](https://i.ibb.co/hxCfX8Ps/Screenshot-20250902-011101.png)
 
 ## To-do
 - Add animations
