@@ -45,6 +45,27 @@ A local, pass-the-remote party game for Apple TV and Android, inspired by *Cards
 3. Sign and install
 4. Enjoy!
 
+## Setup (iOS/iPadOS)
+
+### From IPA
+#### Using Sideloadly (non-jailbroken devices)
+1. Connect your iPhone or iPad to your MacBook or PC with a USB cable
+2. Drag the Portable Edition IPA into Sideloadly
+3. Sign and install
+4. Enjoy!
+
+#### Using ESign (non-jailbroken devices with working certs)
+1. Download the Portable Edition IPA to your iPhone or iPad
+2. Import the file into ESign
+3. Use `Import app library`
+4. Sign the IPA
+5. Install
+6. Enjoy!
+
+#### Using TrollStore (jailbroken devices)
+1. Download or AirDrop the file to your iPhone or iPad
+2. Install using TrollStore
+3. Enjoy!
 
 ## Setup (Android)
 1. Enable installing from unknown sources
