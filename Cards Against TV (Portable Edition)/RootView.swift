@@ -466,8 +466,8 @@ struct RootView: View {
                 loader.loadDeckCollection()
             }
         }
-        .onChange(of: loader.packs) { packs in
-            if !packs.isEmpty && appState == .loading {
+        .onChange(of: loader.packs) {
+            if !$0.isEmpty && appState == .loading {
                 appState = .deckSelection
             }
         }
@@ -666,6 +666,7 @@ struct GameView: View {
     @State private var customCardTexts: [String] = [""]
     @State private var showCardDetail: Bool = false
     @State private var detailCardText: String = ""
+    @State private var shuffledSubmissions: [(viewIdx: Int, actualIdx: Int, submission: (playerIndex: Int, cards: [String]))] = []
 
     @Binding var appState: RootView.AppState
 
@@ -725,6 +726,7 @@ struct GameView: View {
                         .font(.title2)
                         .bold()
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding()
                         .background(Color.black)
                         .foregroundColor(.white)
@@ -806,6 +808,15 @@ struct GameView: View {
         .padding()
         .sheet(isPresented: $showCardDetail) {
             CardDetailView(cardText: detailCardText)
+        }
+        .onChange(of: game.phase) { newPhase in
+            if case .judging = newPhase {
+                let zipped = Array(game.submissions.enumerated())
+                let shuffled = zipped.shuffled()
+                shuffledSubmissions = shuffled.enumerated().map { (dispIdx, zippedItem) in
+                    (viewIdx: dispIdx, actualIdx: zippedItem.offset, submission: zippedItem.element)
+                }
+            }
         }
     }
     
@@ -946,17 +957,9 @@ struct GameView: View {
                 .font(.headline)
                 .bold()
             
-            let submissionViewModels: [(viewIdx: Int, actualIdx: Int, submission: (playerIndex: Int, cards: [String]))] = {
-                let zipped = Array(game.submissions.enumerated())
-                let shuffled = zipped.shuffled()
-                return shuffled.enumerated().map { (dispIdx, zippedItem) in
-                    (viewIdx: dispIdx, actualIdx: zippedItem.offset, submission: zippedItem.element)
-                }
-            }()
-            
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 15) {
-                    ForEach(submissionViewModels, id: \.viewIdx) { model in
+                    ForEach(shuffledSubmissions, id: \.viewIdx) { model in
                         SubmissionButton(
                             cards: model.submission.cards,
                             isSelected: selectedSubmission == model.viewIdx,
@@ -974,8 +977,8 @@ struct GameView: View {
             }
             
             Button("Pick Winner") {
-                if let s = selectedSubmission {
-                    let actual = submissionViewModels[s].actualIdx
+                if let s = selectedSubmission, let model = shuffledSubmissions.first(where: { $0.viewIdx == s }) {
+                    let actual = model.actualIdx
                     game.pickWinner(submissionIndex: actual)
                     selectedSubmission = nil
                 }
@@ -1121,6 +1124,7 @@ struct CardDetailView: View {
                 ScrollView {
                     Text(cardText)
                         .font(.title2)
+                        .foregroundColor(.black)
                         .multilineTextAlignment(.center)
                         .padding(30)
                         .frame(maxWidth: .infinity)
