@@ -36,12 +36,14 @@ struct CompactBlack: Codable, Identifiable {
         case text, pick
     }
 }
+
 struct Player: Identifiable, Equatable {
     var id = UUID()
     var name: String
     var score: Int = 0
     var customCardUses: Int = 0
 }
+
 enum GamePhase: Equatable {
     case waiting
     case dealing
@@ -275,6 +277,7 @@ class GameState: ObservableObject {
         }
         return nil
     }
+    
     private func drawBlackCard(from deck: CompactDeck) -> CompactBlack? {
         let total = deck.black.count
         var attempts = 0
@@ -287,6 +290,7 @@ class GameState: ObservableObject {
         error = "Ran out of black cards."
         return nil
     }
+    
     func startRound() {
         guard let deck = deck else { return }
         error = nil
@@ -319,6 +323,7 @@ class GameState: ObservableObject {
         for _ in submitted { refillHand(for: playerIndex) }
         advanceToNextPlayerOrJudge()
     }
+    
     func submitCustomCard(playerIndex: Int, texts: [String]) {
         if players.indices.contains(playerIndex), players[playerIndex].customCardUses + texts.count <= maxCustomPerPlayer {
             players[playerIndex].customCardUses += texts.count
@@ -328,6 +333,7 @@ class GameState: ObservableObject {
             error = "Custom card limit exceeded!"
         }
     }
+    
     private func advanceToNextPlayerOrJudge() {
         activePlayerIndex = (activePlayerIndex + 1) % players.count
         if activePlayerIndex == roundJudge {
@@ -338,11 +344,13 @@ class GameState: ObservableObject {
             activePlayerIndex = roundJudge
         }
     }
+    
     func refillHand(for playerIndex: Int) {
         if let card = drawWhiteCard() {
             hands[playerIndex].append(card)
         }
     }
+    
     func pickWinner(submissionIndex: Int) {
         guard submissions.indices.contains(submissionIndex) else {
             error = "Winner index out of bounds."
@@ -367,7 +375,7 @@ class GameState: ObservableObject {
 // ---------- Views ----------
 
 @main
-struct CardsAgainstTVApp: App {
+struct CardsAgainstApp: App {
     @StateObject private var loader = DeckLoader()
     @StateObject private var game = GameState()
 
@@ -386,9 +394,7 @@ struct RootView: View {
     @EnvironmentObject var game: GameState
 
     @State private var numPlayers: Int = 3
-    @State private var askNames = false
     @State private var nameInputs: [String] = []
-    @State private var currentNameIndex: Int = 0
     
     enum AppState {
         case loading
@@ -405,14 +411,19 @@ struct RootView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 30) {
-                Text("Cards Against TV")
+                Text("Cards Against TV (Portable Edition)")
                     .font(.largeTitle)
+                    .bold()
                 
                 if let err = loader.errorMessage {
-                    Text("Deck load error: \(err)").foregroundColor(.red)
+                    Text("Deck load error: \(err)")
+                        .foregroundColor(.red)
+                        .padding()
                 }
                 if let gameerr = game.error {
-                    Text("Game error: \(gameerr)").foregroundColor(.red)
+                    Text("Game error: \(gameerr)")
+                        .foregroundColor(.red)
+                        .padding()
                 }
                 
                 Group {
@@ -439,6 +450,7 @@ struct RootView: View {
                 setupInitialState()
             }
         }
+        .navigationViewStyle(StackNavigationViewStyle()) // Force single view on iPad
     }
     
     // MARK: - View Components
@@ -465,18 +477,19 @@ struct RootView: View {
         VStack(spacing: 20) {
             Text("Select Decks")
                 .font(.title)
+                .bold()
             
             Text("Choose which decks to include in the game")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
-            HStack {
+            HStack(spacing: 20) {
                 Button("Continue") {
                     if loader.canContinue {
                         appState = .playerCount
                     }
                 }
-                .buttonStyle(FocusableButtonStyle())
+                .buttonStyle(.borderedProminent)
                 .disabled(!loader.canContinue)
                 
                 Spacer()
@@ -484,12 +497,12 @@ struct RootView: View {
                 Button("Select All") {
                     loader.selectAllDecks()
                 }
-                .buttonStyle(FocusableButtonStyle())
+                .buttonStyle(.bordered)
                 
                 Button("Select None") {
                     loader.selectNoneDecks()
                 }
-                .buttonStyle(FocusableButtonStyle())
+                .buttonStyle(.bordered)
             }
             .padding(.horizontal)
             
@@ -502,17 +515,17 @@ struct RootView: View {
                             HStack {
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text(pack.name)
-                                        .font(.title3)
+                                        .font(.headline)
                                         .foregroundColor(.primary)
                                     HStack {
-                                        Text("\(pack.white.count) White Cards")
-                                            .font(.caption2)
+                                        Text("\(pack.white.count) White")
+                                            .font(.caption)
                                             .foregroundColor(.secondary)
                                         Text("•")
-                                            .font(.caption2)
+                                            .font(.caption)
                                             .foregroundColor(.secondary)
-                                        Text("\(pack.black.count) Black Cards")
-                                            .font(.caption2)
+                                        Text("\(pack.black.count) Black")
+                                            .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
                                 }
@@ -524,7 +537,7 @@ struct RootView: View {
                             .padding()
                             .background(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.gray.opacity(0.2))
+                                    .fill(Color(UIColor.systemGray6))
                             )
                         }
                         .buttonStyle(.plain)
@@ -536,43 +549,50 @@ struct RootView: View {
     }
 
     private var playerCountView: some View {
-        VStack(spacing: 20) {
-            HStack(spacing: 20) {
-                Text("Number of players:")
-                
+        VStack(spacing: 30) {
+            Text("Number of Players")
+                .font(.title)
+                .bold()
+            
+            HStack(spacing: 30) {
                 Button {
                     if numPlayers > minPlayers {
                         numPlayers -= 1
                     }
                 } label: {
-                    Text("–")
-                        .font(.title)
-                        .frame(width: 60)
+                    Image(systemName: "minus.circle.fill")
+                        .font(.largeTitle)
+                        .foregroundColor(numPlayers > minPlayers ? .blue : .gray)
                 }
-                .buttonStyle(FocusableButtonStyle())
+                .disabled(numPlayers <= minPlayers)
                 
                 Text("\(numPlayers)")
-                    .frame(width: 36)
+                    .font(.largeTitle)
+                    .bold()
+                    .frame(minWidth: 50)
                 
                 Button {
                     if numPlayers < maxPlayers {
                         numPlayers += 1
                     }
                 } label: {
-                    Text("+")
-                        .font(.title)
-                        .frame(width: 60)
+                    Image(systemName: "plus.circle.fill")
+                        .font(.largeTitle)
+                        .foregroundColor(numPlayers < maxPlayers ? .blue : .gray)
                 }
-                .buttonStyle(FocusableButtonStyle())
+                .disabled(numPlayers >= maxPlayers)
             }
+            
+            Text("Players: \(minPlayers) - \(maxPlayers)")
+                .font(.caption)
+                .foregroundColor(.secondary)
             
             Button("Continue") {
                 nameInputs = Array(repeating: "", count: numPlayers)
-                currentNameIndex = 0
-                askNames = true
                 appState = .playerNames
             }
-            .buttonStyle(FocusableButtonStyle())
+            .buttonStyle(.borderedProminent)
+            .font(.headline)
             .padding(.top, 20)
             
             Spacer()
@@ -580,27 +600,42 @@ struct RootView: View {
     }
 
     private var playerNamesView: some View {
-        VStack(spacing: 30) {
+        VStack(spacing: 20) {
             Text("Enter Player Names")
                 .font(.title)
+                .bold()
             
-            ForEach(0..<numPlayers, id: \.self) { index in
-                HStack {
-                    Text("Player \(index + 1):")
-                        .frame(width: 150, alignment: .leading)
-                    
-                    TextField("Name", text: $nameInputs[index])
+            ScrollView {
+                LazyVStack(spacing: 15) {
+                    ForEach(0..<numPlayers, id: \.self) { index in
+                        HStack {
+                            Text("Player \(index + 1):")
+                                .font(.headline)
+                                .frame(width: 100, alignment: .leading)
+                            
+                            TextField("Enter name", text: $nameInputs[index])
+                                .textFieldStyle(.roundedBorder)
+                                .autocapitalization(.words)
+                                .disableAutocorrection(false)
+                        }
                         .padding(.horizontal)
+                    }
                 }
             }
             
             Button("Start Game") {
                 startGame()
             }
-            .buttonStyle(FocusableButtonStyle())
+            .buttonStyle(.borderedProminent)
+            .font(.headline)
+            .disabled(!allNamesEntered)
             .padding(.top, 20)
         }
-        .padding(.horizontal, 40)
+        .padding()
+    }
+    
+    private var allNamesEntered: Bool {
+        nameInputs.allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     }
     
     private func setupInitialState() {
@@ -634,71 +669,104 @@ struct GameView: View {
 
     @Binding var appState: RootView.AppState
 
-    private enum CustomFieldFocus: Hashable {
-        case field(Int)
-    }
-    @FocusState private var focusedCustomField: CustomFieldFocus?
-    
-    private func playerBackground(for index: Int) -> some View {
-        Group {
-            if game.roundJudge == index {
-                RoundedRectangle(cornerRadius: 8).stroke(Color.yellow, lineWidth: 3)
-            } else if game.activePlayerIndex == index && game.phase == .round {
-                RoundedRectangle(cornerRadius: 8).stroke(Color.blue, lineWidth: 3)
-            } else {
-                Color.clear
-            }
-        }
-    }
-
     var body: some View {
         VStack(spacing: 20) {
-            HStack {
-                ForEach(Array(game.players.enumerated()), id: \.offset) { idx, p in
-                    VStack {
-                        if game.phase == .round && game.activePlayerIndex == idx {
-                            Text("Your Turn").font(.caption).bold()
+            // Player Status
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 20) {
+                    ForEach(Array(game.players.enumerated()), id: \.offset) { idx, player in
+                        VStack(spacing: 5) {
+                            if game.phase == .round && game.activePlayerIndex == idx {
+                                Text("Your Turn")
+                                    .font(.caption2)
+                                    .foregroundColor(.blue)
+                                    .bold()
+                            }
+                            if game.phase == .judging && game.roundJudge == idx {
+                                Text("Judge")
+                                    .font(.caption2)
+                                    .foregroundColor(.orange)
+                                    .bold()
+                            }
+                            Text(player.name)
+                                .font(.headline)
+                                .lineLimit(1)
+                            Text("Score: \(player.score)")
+                                .font(.subheadline)
+                            Text("Custom: \(player.customCardUses)/20")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
                         }
-                        if game.phase == .judging && game.roundJudge == idx {
-                            Text("Judge").font(.caption).bold()
-                        }
-                        Text(p.name)
-                        Text("Score: \(p.score)")
-                        Text("Custom: \(p.customCardUses)/20").font(.caption2)
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(backgroundColorForPlayer(idx))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(borderColorForPlayer(idx), lineWidth: 2)
+                                )
+                        )
                     }
-                    .padding(8)
-                    .background(playerBackground(for: idx))
                 }
+                .padding(.horizontal)
             }
-            Divider().frame(height: 2)
             
+            Divider()
+            
+            // Black Card
             if let black = game.currentBlack {
-                VStack(spacing: 8) {
-                    Text("Prompt:")
+                VStack(spacing: 10) {
+                    Text("Prompt")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .textCase(.uppercase)
+                    
                     Text(black.text)
                         .font(.title2)
-                        .lineLimit(nil)
+                        .bold()
                         .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.black)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                    
+                    if black.pick > 1 {
+                        Text("Pick \(black.pick) cards")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
-            } else {
-                Text("No black card available!").foregroundColor(.red)
+                .padding(.horizontal)
             }
             
             if let gameerr = game.error {
-                Text("Game error: \(gameerr)").foregroundColor(.red)
+                Text("Game error: \(gameerr)")
+                    .foregroundColor(.red)
+                    .padding()
             }
             
-            switch game.phase {
-            case .waiting, .dealing:
-                Text("Waiting for next round...")
-            case .round:
-                roundView
-            case .judging:
-                judgingView
-            case .showWinner:
-                Text("Winner chosen!")
-                Text("Next round starting...")
+            // Game Phase Content
+            Group {
+                switch game.phase {
+                case .waiting, .dealing:
+                    Text("Preparing next round...")
+                        .font(.headline)
+                        .padding()
+                    
+                case .round:
+                    roundView
+                    
+                case .judging:
+                    judgingView
+                    
+                case .showWinner:
+                    VStack(spacing: 15) {
+                        Text("Winner chosen!")
+                            .font(.title)
+                            .bold()
+                        Text("Next round starting...")
+                            .font(.headline)
+                    }
                     .onAppear {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             game.startRound()
@@ -706,20 +774,32 @@ struct GameView: View {
                             selectedCards = []
                         }
                     }
-            case .gameover(let winners):
-                VStack(spacing: 16) {
-                    Text("🎉 WE HAVE A WINNER! 🎉").font(.largeTitle).foregroundColor(.yellow)
-                    ForEach(winners) { winner in
-                        Text(winner.name).font(.title).foregroundColor(.white)
+                    
+                case .gameover(let winners):
+                    VStack(spacing: 20) {
+                        Text("🎉 GAME OVER! 🎉")
+                            .font(.largeTitle)
+                            .bold()
+                        
+                        ForEach(winners) { winner in
+                            Text("\(winner.name) Wins!")
+                                .font(.title)
+                                .bold()
+                                .foregroundColor(.green)
+                        }
+                        
+                        VStack(spacing: 15) {
+                            Button("Play Again") {
+                                game.setup(with: game.deck!, playerNames: game.players.map { $0.name })
+                            }
+                            .buttonStyle(.borderedProminent)
+                            
+                            Button("New Game") {
+                                appState = .deckSelection
+                            }
+                            .buttonStyle(.bordered)
+                        }
                     }
-                    Button("Play Again") {
-                        game.setup(with: game.deck!, playerNames: game.players.map { $0.name })
-                    }
-                    .buttonStyle(FocusableButtonStyle())
-                    Button("Start New Game") {
-                        appState = .deckSelection
-                    }
-                    .buttonStyle(FocusableButtonStyle())
                 }
             }
         }
@@ -729,59 +809,89 @@ struct GameView: View {
         }
     }
     
+    private func backgroundColorForPlayer(_ index: Int) -> Color {
+        if game.roundJudge == index {
+            return Color.orange.opacity(0.2)
+        } else if game.activePlayerIndex == index && game.phase == .round {
+            return Color.blue.opacity(0.2)
+        } else {
+            return Color(UIColor.systemGray6)
+        }
+    }
+    
+    private func borderColorForPlayer(_ index: Int) -> Color {
+        if game.roundJudge == index {
+            return Color.orange
+        } else if game.activePlayerIndex == index && game.phase == .round {
+            return Color.blue
+        } else {
+            return Color.clear
+        }
+    }
+    
     private var roundView: some View {
-        VStack {
-            Text(game.activePlayerIndex == game.players.firstIndex(where: { $0.id == game.players[game.roundJudge].id }) ? "You are the judge this round." : "Select your card(s)")
-            
-            ScrollView(.horizontal) {
-                HStack(spacing: 12) {
-                    if game.activePlayerIndex == game.players.firstIndex(where: { $0.id == game.players[game.roundJudge].id }) {
-                        Text("Waiting for other players...")
-                    } else {
-                        ForEach(Array(game.hands[game.activePlayerIndex].enumerated()), id: \.offset) { index, card in
-                            FocusableCardButton(
-                                text: card,
-                                isSelected: selectedCards.contains(index),
-                                onTap: {
-                                    if selectedCards.contains(index) {
-                                        selectedCards.removeAll(where: { $0 == index })
-                                    } else if selectedCards.count < (game.currentBlack?.pick ?? 1) {
-                                        selectedCards.append(index)
+        VStack(spacing: 20) {
+            if game.activePlayerIndex == game.roundJudge {
+                Text("You are the judge this round")
+                    .font(.headline)
+                    .padding()
+                    .background(Color.orange.opacity(0.2))
+                    .cornerRadius(10)
+            } else {
+                VStack(spacing: 15) {
+                    Text("Select your card\(selectedCards.count > 1 || (game.currentBlack?.pick ?? 1) > 1 ? "s" : "")")
+                        .font(.headline)
+                    
+                    // Cards ScrollView
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 15) {
+                            // Player's cards
+                            ForEach(Array(game.hands[game.activePlayerIndex].enumerated()), id: \.offset) { index, card in
+                                CardButton(
+                                    text: card,
+                                    isSelected: selectedCards.contains(index),
+                                    onTap: {
+                                        if selectedCards.contains(index) {
+                                            selectedCards.removeAll(where: { $0 == index })
+                                        } else if selectedCards.count < (game.currentBlack?.pick ?? 1) {
+                                            selectedCards.append(index)
+                                        }
+                                    },
+                                    onLongPress: {
+                                        detailCardText = card
+                                        showCardDetail = true
                                     }
-                                },
-                                onLongPress: {
-                                    detailCardText = card
-                                    showCardDetail = true
-                                }
-                            )
+                                )
+                            }
+                            
+                            // Custom Card Option
+                            if let pick = game.currentBlack?.pick,
+                               game.players[game.activePlayerIndex].customCardUses < game.maxCustomPerPlayer {
+                                CustomCardButton(
+                                    isSelected: showCustomEntry,
+                                    pick: pick,
+                                    onTap: {
+                                        showCustomEntry.toggle()
+                                        selectedCards = []
+                                    }
+                                )
+                            }
                         }
-                        
-                        // Custom Card Button
-                        if let pick = game.currentBlack?.pick, game.players[game.activePlayerIndex].customCardUses < game.maxCustomPerPlayer {
-                            FocusableCustomButton(
-                                isSelected: showCustomEntry,
-                                pick: pick,
-                                onTap: {
-                                    showCustomEntry.toggle()
-                                    selectedCards = [] // Deselect other cards
-                                },
-                                focusEnabled: !showCustomEntry
-                            )
+                        .padding(.horizontal)
+                    }
+                    
+                    if showCustomEntry {
+                        customCardEntryView
+                    } else {
+                        Button("Submit Card\(selectedCards.count > 1 ? "s" : "")") {
+                            game.submitCard(playerIndex: game.activePlayerIndex, cardIndicesInHand: selectedCards)
+                            selectedCards = []
                         }
+                        .buttonStyle(.borderedProminent)
+                        .font(.headline)
+                        .disabled(selectedCards.count != (game.currentBlack?.pick ?? 1))
                     }
                 }
-                .padding()
-            }
-            
-            if showCustomEntry {
-                customCardEntryView
-            } else {
-                Button("Submit Card\(selectedCards.count > 1 ? "s" : "")") {
-                    game.submitCard(playerIndex: game.activePlayerIndex, cardIndicesInHand: selectedCards)
-                    selectedCards = []
-                }
-                .buttonStyle(FocusableButtonStyle())
-                .disabled(selectedCards.count != (game.currentBlack?.pick ?? 1))
             }
         }
     }
@@ -789,65 +899,65 @@ struct GameView: View {
     private var customCardEntryView: some View {
         VStack(spacing: 20) {
             let pick = game.currentBlack?.pick ?? 1
-            Text("Enter \(pick) custom answer\(pick > 1 ? "s" : "") (up to 20/plyr per game)").font(.subheadline)
+            
+            Text("Enter \(pick) custom answer\(pick > 1 ? "s" : "")")
+                .font(.headline)
+            
             ForEach(0..<pick, id: \.self) { idx in
-                TextField("Custom answer #\(idx+1)...", text: Binding(
-                    get: { customCardTexts.indices.contains(idx) ? customCardTexts[idx] : "" },
-                    set: { v in if customCardTexts.indices.contains(idx) { customCardTexts[idx] = v } }
-                ))
-                .textInputAutocapitalization(.sentences)
-                .disableAutocorrection(false)
-                .frame(width: 400)
-                .padding(8)
-                .background(Color.white)
-                .cornerRadius(8)
-                .focused($focusedCustomField, equals: .field(idx))
-                .submitLabel(idx < pick - 1 ? .next : .done)
-                .onSubmit {
-                    if idx < pick - 1 {
-                        focusedCustomField = .field(idx + 1)
-                    } else {
-                        focusedCustomField = .field(idx)
+                TextField("Custom answer #\(idx+1)", text: Binding(
+                    get: {
+                        if customCardTexts.count <= idx {
+                            customCardTexts.append("")
+                        }
+                        return customCardTexts[idx]
+                    },
+                    set: { value in
+                        while customCardTexts.count <= idx {
+                            customCardTexts.append("")
+                        }
+                        customCardTexts[idx] = value
                     }
-                }
+                ))
+                .textFieldStyle(.roundedBorder)
+                .autocapitalization(.sentences)
             }
-            Button {
+            
+            Button("Submit Custom Card\(pick > 1 ? "s" : "")") {
                 let values = customCardTexts.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 if values.allSatisfy({ !$0.isEmpty }) {
                     game.submitCustomCard(playerIndex: game.activePlayerIndex, texts: values)
                     customCardTexts = Array(repeating: "", count: pick)
                     showCustomEntry = false
                     selectedCards = []
-                    focusedCustomField = nil
                 }
-            } label: {
-                Text("Submit Custom Card\(pick > 1 ? "s" : "")")
-                    .font(.title2)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: 420)
-                    .background(customCardTexts.allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) ? Color.green : Color.gray)
-                    .cornerRadius(10)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.borderedProminent)
+            .font(.headline)
             .disabled(!customCardTexts.allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }))
         }
+        .padding()
+        .background(Color(UIColor.systemGray6))
+        .cornerRadius(15)
     }
     
     private var judgingView: some View {
-        VStack {
+        VStack(spacing: 20) {
             Text("Judge: Select the winning card")
+                .font(.headline)
+                .bold()
+            
             let submissionViewModels: [(viewIdx: Int, actualIdx: Int, submission: (playerIndex: Int, cards: [String]))] = {
                 let zipped = Array(game.submissions.enumerated())
                 let shuffled = zipped.shuffled()
-                return shuffled.enumerated().map { (dispIdx, zippedItem) in (viewIdx: dispIdx, actualIdx: zippedItem.offset, submission: zippedItem.element) }
+                return shuffled.enumerated().map { (dispIdx, zippedItem) in
+                    (viewIdx: dispIdx, actualIdx: zippedItem.offset, submission: zippedItem.element)
+                }
             }()
             
-            ScrollView(.horizontal) {
-                HStack(spacing: 12) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 15) {
                     ForEach(submissionViewModels, id: \.viewIdx) { model in
-                        FocusableSubmissionButton(
+                        SubmissionButton(
                             cards: model.submission.cards,
                             isSelected: selectedSubmission == model.viewIdx,
                             onTap: {
@@ -860,272 +970,176 @@ struct GameView: View {
                         )
                     }
                 }
-                .padding()
+                .padding(.horizontal)
             }
-            Button {
+            
+            Button("Pick Winner") {
                 if let s = selectedSubmission {
                     let actual = submissionViewModels[s].actualIdx
                     game.pickWinner(submissionIndex: actual)
                     selectedSubmission = nil
                 }
-            } label: {
-                Text("Judge: Pick Winner")
-                    .font(.title2)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(selectedSubmission != nil ? Color.green : Color.gray)
-                    .cornerRadius(10)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.borderedProminent)
+            .font(.headline)
             .disabled(selectedSubmission == nil)
         }
     }
 }
 
-// MARK: - Reusable Components
-struct FocusableCardButton: View {
+// MARK: - Card Components
+struct CardButton: View {
     let text: String
     let isSelected: Bool
     let onTap: () -> Void
     let onLongPress: () -> Void
-    @State private var isFlipped = false
-    @FocusState private var isFocused: Bool
     @State private var isPressed = false
     
     var body: some View {
-        ZStack {
-            cardFront
-            cardBack
-        }
-        .frame(width: 420, height: 200)
-        .rotation3DEffect(.degrees(isFlipped ? 180 : 0), axis: (x:0, y:1, z:0))
-        .scaleEffect((isSelected || isFocused) ? 1.06 : 1.0)
-        .animation(.easeInOut(duration: 0.2), value: isSelected || isFocused)
-        .animation(.spring(), value: isFlipped)
-        .animation(.spring(response: 0.45, dampingFraction: 0.72), value: text)
-        .transition(.asymmetric(
-            insertion: .move(edge: .bottom).combined(with: .opacity),
-            removal: .scale.combined(with: .opacity))
-        )
-        .focusable()
-        .focused($isFocused)
-        .onTapGesture { onTap() }
-        .onLongPressGesture(minimumDuration: 0.1, perform: { onLongPress() }) { pressing in
-            withAnimation(.easeInOut(duration: 0.1)) {
-                isPressed = pressing
-            }
-        }
-    }
-    
-    private var cardFront: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(text)
-                .font(.title3)
+                .font(.body)
                 .foregroundColor(.black)
+                .multilineTextAlignment(.leading)
                 .lineLimit(nil)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(20)
-            Spacer()
+                .padding(15)
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(width: 200, height: 140)
         .background(Color.white)
-        .cornerRadius(12)
-        .shadow(radius: 5)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(borderColorForState, lineWidth: borderWidthForState)
+                .stroke(isSelected ? Color.green : Color.gray, lineWidth: isSelected ? 3 : 1)
         )
-        .opacity(isFlipped ? 0 : 1)
-    }
-    
-    private var cardBack: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(Color.black)
-            .shadow(radius: 5)
-            .overlay(
-                Image(systemName: "questionmark.circle.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 100)
-                    .colorInvert()
-                    .rotation3DEffect(.degrees(180), axis: (x:0, y:1, z:0))
-            )
-            .rotation3DEffect(.degrees(180), axis: (x:0, y:1, z:0))
-            .opacity(isFlipped ? 1 : 0)
-    }
-    
-    private var borderColorForState: Color {
-        if isSelected { return Color.green }
-        if isFocused { return Color.yellow }
-        return Color.gray
-    }
-    
-    private var borderWidthForState: CGFloat {
-        if isSelected { return 5 }
-        if isFocused { return 3 }
-        return 1
+        .cornerRadius(12)
+        .shadow(radius: 3)
+        .scaleEffect(isPressed ? 0.95 : 1.0)
+        .animation(.easeInOut(duration: 0.1), value: isPressed)
+        .onTapGesture {
+            onTap()
+        }
+        .onLongPressGesture(minimumDuration: 0.5) {
+            onLongPress()
+        } onPressingChanged: { pressing in
+            isPressed = pressing
+        }
     }
 }
-struct FocusableSubmissionButton: View {
+
+struct SubmissionButton: View {
     let cards: [String]
     let isSelected: Bool
     let onTap: () -> Void
     let onLongPress: () -> Void
-    @FocusState private var isFocused: Bool
     @State private var isPressed = false
     
     var body: some View {
         VStack(spacing: 8) {
-            ForEach(cards, id: \.self) { card in
+            ForEach(Array(cards.enumerated()), id: \.offset) { index, card in
                 Text(card)
-                    .font(.title3)
+                    .font(.body)
                     .foregroundColor(.black)
                     .multilineTextAlignment(.center)
-                    .lineLimit(nil)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(3)
                     .padding(8)
                     .frame(maxWidth: .infinity)
                     .background(Color.white)
                     .cornerRadius(8)
             }
+            Spacer()
         }
-        .padding()
-        .frame(width: 420, height: 200)
-        .background(backgroundColorForState)
+        .padding(10)
+        .frame(width: 200, height: 140)
+        .background(isSelected ? Color.green.opacity(0.3) : Color(UIColor.systemGray6))
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(borderColorForState, lineWidth: borderWidthForState)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isSelected ? Color.green : Color.gray, lineWidth: isSelected ? 3 : 1)
         )
-        .cornerRadius(8)
+        .cornerRadius(12)
+        .shadow(radius: 3)
         .scaleEffect(isPressed ? 0.95 : 1.0)
-        .focusable()
-        .focused($isFocused)
-        .onTapGesture { onTap() }
-        .onLongPressGesture(minimumDuration: 0.1, perform: { onLongPress() }) { pressing in
-            withAnimation(.easeInOut(duration: 0.1)) {
-                isPressed = pressing
-            }
+        .animation(.easeInOut(duration: 0.1), value: isPressed)
+        .onTapGesture {
+            onTap()
         }
-    }
-    
-    private var backgroundColorForState: Color {
-        if isSelected { return Color.green.opacity(0.5) }
-        if isFocused { return Color.gray.opacity(0.3) }
-        return Color.gray.opacity(0.1)
-    }
-    
-    private var borderColorForState: Color {
-        if isSelected { return Color.green }
-        if isFocused { return Color.blue.opacity(0.7) }
-        return Color.gray
-    }
-    
-    private var borderWidthForState: CGFloat {
-        if isSelected { return 5 }
-        if isFocused { return 3 }
-        return 1
+        .onLongPressGesture(minimumDuration: 0.5) {
+            onLongPress()
+        } onPressingChanged: { pressing in
+            isPressed = pressing
+        }
     }
 }
-struct FocusableCustomButton: View {
+
+struct CustomCardButton: View {
     let isSelected: Bool
     let pick: Int
     let onTap: () -> Void
-    let focusEnabled: Bool
-    @FocusState private var isFocused: Bool
     @State private var isPressed = false
     
     var body: some View {
-        VStack {
+        VStack(spacing: 10) {
             Image(systemName: "plus.rectangle.on.rectangle")
                 .font(.largeTitle)
-            Text("Write Custom \(pick > 1 ? "Cards" : "Card")")
-                .padding(.top, 6)
+                .foregroundColor(.blue)
+            
+            Text("Write Custom")
+                .font(.headline)
+                .bold()
+            
+            Text("\(pick > 1 ? "Cards" : "Card")")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
         }
-        .frame(width: 420, height: 200)
-        .background(backgroundColorForState)
+        .frame(width: 200, height: 140)
+        .background(isSelected ? Color.blue.opacity(0.3) : Color.white)
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(borderColorForState, lineWidth: borderWidthForState)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isSelected ? Color.blue : Color.gray, lineWidth: isSelected ? 3 : 1)
         )
-        .cornerRadius(8)
+        .cornerRadius(12)
+        .shadow(radius: 3)
         .scaleEffect(isPressed ? 0.95 : 1.0)
-        .focusable(focusEnabled)
-        .focused($isFocused)
-        .onTapGesture { onTap() }
-        .onLongPressGesture(minimumDuration: 0.1) { } onPressingChanged: { pressing in
-            withAnimation(.easeInOut(duration: 0.1)) {
-                isPressed = pressing
-            }
+        .animation(.easeInOut(duration: 0.1), value: isPressed)
+        .onTapGesture {
+            onTap()
         }
-    }
-    
-    private var backgroundColorForState: Color {
-        if isSelected { return Color.blue.opacity(0.5) }
-        if isFocused { return Color.gray.opacity(0.3) }
-        return Color.white
-    }
-    
-    private var borderColorForState: Color {
-        if isSelected { return Color.blue }
-        if isFocused { return Color.blue.opacity(0.7) }
-        return Color.gray
-    }
-    
-    private var borderWidthForState: CGFloat {
-        if isSelected { return 5 }
-        if isFocused { return 3 }
-        return 1
+        .onLongPressGesture(minimumDuration: 0.1) {
+            // No action on long press for custom button
+        } onPressingChanged: { pressing in
+            isPressed = pressing
+        }
     }
 }
+
 struct CardDetailView: View {
     let cardText: String
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(spacing: 30) {
-            Text("Card Details")
-                .font(.largeTitle)
-                .foregroundColor(.white)
-                .padding(.top, 40)
-
-            ScrollView {
-                Text(cardText)
-                    .font(.title2)
-                    .foregroundColor(.black)
-                    .multilineTextAlignment(.center)
-                    .padding(40)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.white)
-                    .cornerRadius(12)
-                    .shadow(radius: 5)
+        NavigationView {
+            VStack(spacing: 30) {
+                ScrollView {
+                    Text(cardText)
+                        .font(.title2)
+                        .multilineTextAlignment(.center)
+                        .padding(30)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.white)
+                        .cornerRadius(15)
+                        .shadow(radius: 5)
+                }
+                .frame(maxHeight: 400)
             }
-            .frame(maxHeight: 400)
-
-            Button("Close") {
-                dismiss()
-            }
-            .font(.title2)
-            .buttonStyle(.borderedProminent)
-            .focusable()
-            .padding(.bottom, 40)
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black.opacity(0.9))
-        .ignoresSafeArea()
-    }
-}
-struct FocusableButtonStyle: ButtonStyle {
-    @Environment(\.isFocused) private var isFocused: Bool
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
             .padding()
-            .background(isFocused ? Color.blue : Color.gray)
-            .foregroundColor(.white)
-            .cornerRadius(12)
-            .animation(.easeInOut(duration: 0.2), value: isFocused)
+            .navigationTitle("Card Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
