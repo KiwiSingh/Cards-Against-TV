@@ -4,7 +4,7 @@
 </p>
 
 
-A local, pass-the-remote party game for Apple TV and Android, inspired by *Cards Against Humanity*. Built with SwiftUI for tvOS, and rewritten in Kotlin for Android, the game features multi-card prompts, per-turn custom answers, rotating judges, and a first-to-5 win condition.
+A local, pass-the-remote party game for iPhone, iPad, Apple TV and Android, inspired by *Cards Against Humanity*. Built with SwiftUI for tvOS, and rewritten in Kotlin for Android, the game features multi-card prompts, per-turn custom answers, rotating judges, and a first-to-5 win condition.
 
 ## Features
 
