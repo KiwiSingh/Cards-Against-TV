@@ -22,6 +22,11 @@ A local, pass-the-remote party game for iPhone, iPad, Apple TV and Android, insp
 * Swift 5.7 or later
 * Deck JSON included in the app bundle as `cah-all-compact.json`. You can find the source [here](https://github.com/crhallberg/json-against-humanity/blob/latest/cah-all-compact.json).
 
+## Requirements (iOS/iPadOS)
+* iOS/iPadOS 15.6 or later
+* A computer (unless your device is jailbroken)
+* Sideloadly, TrollStore or ESign for signing and sideloading
+
 ## Requirements (Android)
 * Android 10 or later
 * A working brain
