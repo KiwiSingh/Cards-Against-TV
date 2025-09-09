@@ -20,7 +20,7 @@ A local, pass-the-remote party game for iPhone, iPad, Apple TV and Android, insp
 * tvOS 17.6 or later (officially tested only on tvOS 26)
 * Xcode 15 or later
 * Swift 5.7 or later
-* Deck JSON included in the app bundle as `cah-all-compact.json`. You can find the source [here](https://github.com/crhallberg/json-against-humanity/blob/latest/cah-all-compact.json).
+* Deck JSON included in the app bundle as `cah-all-compact.json`. You can find the original source [here](https://github.com/crhallberg/json-against-humanity/blob/latest/cah-all-compact.json).
 
 ## Requirements (iOS/iPadOS)
 * iOS/iPadOS 15.6 or later
@@ -36,7 +36,7 @@ A local, pass-the-remote party game for iPhone, iPad, Apple TV and Android, insp
 ### From source
 
 1. Create a new tvOS SwiftUI app in Xcode.
-2. Download `cah-all-compact.json` and add it to your project (ensure “Copy items if needed” and target membership are checked).
+2. Clone the GitHub repo and add `cah-all-compact.json` to your project (ensure “Copy items if needed” and target membership are checked).
 3. Replace the default app entry point with the provided `Cards_Against_TVApp.swift`.
 4. Set up the app icon using the included image assets:
 
@@ -150,6 +150,7 @@ The deck file uses a simple format:
 * **Deck not found**: Ensure the JSON file is named `cah-all-compact.json` and included in the app target.
 * **Parse error**: Make sure the JSON is valid UTF-8.
 * **App Icon errors**: The icon assets are included in `Assets.xcassets`.
+* **Can't type player names on iOS build:** Dismiss and restart the app.
 
 ## Credits
 crhallberg for his amazing [JSON Against Humanity](https://github.com/crhallberg/json-against-humanity) project
