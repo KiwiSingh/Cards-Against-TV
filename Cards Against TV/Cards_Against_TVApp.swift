@@ -545,7 +545,7 @@ struct RootView: View {
                         numPlayers -= 1
                     }
                 } label: {
-                    Text("–")
+                    Text("−")
                         .font(.title)
                         .frame(width: 60)
                 }
@@ -838,23 +838,30 @@ struct GameView: View {
     private var judgingView: some View {
         VStack {
             Text("Judge: Select the winning card")
-            let submissionViewModels: [(viewIdx: Int, actualIdx: Int, submission: (playerIndex: Int, cards: [String]))] = {
-                let zipped = Array(game.submissions.enumerated())
-                let shuffled = zipped.shuffled()
-                return shuffled.enumerated().map { (dispIdx, zippedItem) in (viewIdx: dispIdx, actualIdx: zippedItem.offset, submission: zippedItem.element) }
+            
+            // Create a stable mapping between display order and original submission indices
+            let shuffledSubmissions: [(displayIndex: Int, originalIndex: Int, submission: (playerIndex: Int, cards: [String]))] = {
+                // Create array of (originalIndex, submission) pairs
+                let indexedSubmissions = game.submissions.enumerated().map { (index: $0, submission: $1) }
+                // Shuffle the pairs
+                let shuffled = indexedSubmissions.shuffled()
+                // Map to display format with stable indices
+                return shuffled.enumerated().map { displayIdx, item in
+                    (displayIndex: displayIdx, originalIndex: item.index, submission: item.submission)
+                }
             }()
             
             ScrollView(.horizontal) {
                 HStack(spacing: 12) {
-                    ForEach(submissionViewModels, id: \.viewIdx) { model in
+                    ForEach(shuffledSubmissions, id: \.displayIndex) { item in
                         FocusableSubmissionButton(
-                            cards: model.submission.cards,
-                            isSelected: selectedSubmission == model.viewIdx,
+                            cards: item.submission.cards,
+                            isSelected: selectedSubmission == item.displayIndex,
                             onTap: {
-                                selectedSubmission = model.viewIdx
+                                selectedSubmission = item.displayIndex
                             },
                             onLongPress: {
-                                detailCardText = model.submission.cards.joined(separator: "\n\n")
+                                detailCardText = item.submission.cards.joined(separator: "\n\n")
                                 showCardDetail = true
                             }
                         )
@@ -862,10 +869,12 @@ struct GameView: View {
                 }
                 .padding()
             }
+            
             Button {
-                if let s = selectedSubmission {
-                    let actual = submissionViewModels[s].actualIdx
-                    game.pickWinner(submissionIndex: actual)
+                if let selectedDisplayIndex = selectedSubmission {
+                    // Find the original submission index from the display index
+                    let originalSubmissionIndex = shuffledSubmissions[selectedDisplayIndex].originalIndex
+                    game.pickWinner(submissionIndex: originalSubmissionIndex)
                     selectedSubmission = nil
                 }
             } label: {
