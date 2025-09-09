@@ -17,7 +17,7 @@ A local, pass-the-remote party game for iPhone, iPad, Apple TV and Android, insp
 
 ## Requirements (tvOS)
 
-* tvOS 15 or later (officially tested only on tvOS 26)
+* tvOS 17.6 or later (officially tested only on tvOS 26)
 * Xcode 15 or later
 * Swift 5.7 or later
 * Deck JSON included in the app bundle as `cah-all-compact.json`. You can find the source [here](https://github.com/crhallberg/json-against-humanity/blob/latest/cah-all-compact.json).
