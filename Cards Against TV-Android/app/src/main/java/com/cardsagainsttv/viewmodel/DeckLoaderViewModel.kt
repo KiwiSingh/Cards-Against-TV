@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.cardsagainsttv.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.*
 import kotlinx.serialization.decodeFromString
@@ -28,10 +30,32 @@ class DeckLoaderViewModel(app: Application) : AndroidViewModel(app) {
     private val _deck = MutableStateFlow<CompactDeck?>(null)
     val deck: StateFlow<CompactDeck?> = _deck
 
+    private val _searchText = MutableStateFlow("")
+    val searchText: StateFlow<String> = _searchText
+
     val errorMessage = MutableStateFlow<String?>(null)
     val isLoading = MutableStateFlow(false)
 
     val canContinue: Boolean get() = _selectedPackIds.value.isNotEmpty()
+
+    // Combine packs and search text to create filtered results
+    val filteredPacks: StateFlow<List<DeckPack>> = combine(_packs, _searchText) { packs, search ->
+        if (search.isEmpty()) {
+            packs.sortedBy { it.name }
+        } else {
+            packs.filter { pack ->
+                pack.name.contains(search, ignoreCase = true)
+            }.sortedBy { it.name }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    fun updateSearchText(text: String) {
+        _searchText.value = text
+    }
 
     fun load() {
         if (isLoading.value || _packs.value.isNotEmpty()) return
@@ -68,10 +92,12 @@ class DeckLoaderViewModel(app: Application) : AndroidViewModel(app) {
         _selectedPackIds.value = s
         createCombinedDeck()
     }
+
     fun selectAll() {
         _selectedPackIds.value = _packs.value.indices.toSet()
         createCombinedDeck()
     }
+
     fun selectNone() {
         _selectedPackIds.value = emptySet()
         createCombinedDeck()

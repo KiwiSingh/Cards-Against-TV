@@ -7,6 +7,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -59,7 +62,7 @@ fun RootScreen(loader: DeckLoaderViewModel, game: GameViewModel) {
                 AppState.PlayerCount -> {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Number of players:"); Spacer(Modifier.width(12.dp))
-                        Button(onClick = { if (numPlayers>minPlayers) { numPlayers--; nameInputs = List(numPlayers){""} } }) { Text("–") }
+                        Button(onClick = { if (numPlayers>minPlayers) { numPlayers--; nameInputs = List(numPlayers){""} } }) { Text("−") }
                         Spacer(Modifier.width(12.dp)); Text("$numPlayers")
                         Spacer(Modifier.width(12.dp))
                         Button(onClick = { if (numPlayers<maxPlayers) { numPlayers++; nameInputs = List(numPlayers){""} } }) { Text("+") }
@@ -99,9 +102,29 @@ fun RootScreen(loader: DeckLoaderViewModel, game: GameViewModel) {
 @Composable
 fun DeckSelectionView(loader: DeckLoaderViewModel, onContinue: () -> Unit) {
     val packs by loader.packs.collectAsState()
+    val filteredPacks by loader.filteredPacks.collectAsState()
     val selected by loader.selectedPackIds.collectAsState()
+    val searchText by loader.searchText.collectAsState()
 
     Column(Modifier.fillMaxSize()) {
+        // Search Bar
+        OutlinedTextField(
+            value = searchText,
+            onValueChange = { loader.updateSearchText(it) },
+            label = { Text("Search decks...") },
+            leadingIcon = {
+                Icon(Icons.Default.Search, contentDescription = "Search")
+            },
+            trailingIcon = {
+                if (searchText.isNotEmpty()) {
+                    IconButton(onClick = { loader.updateSearchText("") }) {
+                        Icon(Icons.Default.Clear, contentDescription = "Clear")
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+        )
+
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Button(onClick = onContinue, enabled = loader.canContinue) { Text("Continue") }
             Row {
@@ -111,7 +134,7 @@ fun DeckSelectionView(loader: DeckLoaderViewModel, onContinue: () -> Unit) {
         }
         Spacer(Modifier.height(8.dp))
         LazyColumn {
-            itemsIndexed(packs.sortedBy { it.name }) { index, pack ->
+            itemsIndexed(filteredPacks) { _, pack ->
                 val actualIndex = packs.indexOf(pack)
                 Card(
                     Modifier.fillMaxWidth().padding(vertical = 6.dp).clickable { loader.togglePack(actualIndex) }
