@@ -389,6 +389,7 @@ struct RootView: View {
     @State private var askNames = false
     @State private var nameInputs: [String] = []
     @State private var currentNameIndex: Int = 0
+    @State private var searchText: String = ""
     
     enum AppState {
         case loading
@@ -441,6 +442,19 @@ struct RootView: View {
         }
     }
     
+    // MARK: - Computed Properties
+    
+    private var filteredPacks: [DeckPack] {
+        let sortedPacks = loader.packs.sorted { $0.name < $1.name }
+        if searchText.isEmpty {
+            return sortedPacks
+        } else {
+            return sortedPacks.filter { pack in
+                pack.name.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+    
     // MARK: - View Components
     
     private var loadingView: some View {
@@ -470,6 +484,13 @@ struct RootView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
+            // Search bar
+            TextField("Search decks...(do select none before you search for a single deck only)", text: $searchText)
+                .padding(12)
+                .background(Color.gray.opacity(0.2))
+                .cornerRadius(8)
+                .padding(.horizontal)
+            
             HStack {
                 Button("Continue") {
                     if loader.canContinue {
@@ -495,7 +516,7 @@ struct RootView: View {
             
             ScrollView {
                 LazyVStack(spacing: 15) {
-                    ForEach(loader.packs.sorted { $0.name < $1.name }) { pack in
+                    ForEach(filteredPacks) { pack in
                         Button(action: {
                             loader.togglePackSelection(pack.id)
                         }) {
@@ -545,7 +566,7 @@ struct RootView: View {
                         numPlayers -= 1
                     }
                 } label: {
-                    Text("−")
+                    Text("-")
                         .font(.title)
                         .frame(width: 60)
                 }

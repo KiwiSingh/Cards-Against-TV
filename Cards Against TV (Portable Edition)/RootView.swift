@@ -395,6 +395,7 @@ struct RootView: View {
 
     @State private var numPlayers: Int = 3
     @State private var nameInputs: [String] = []
+    @State private var searchText: String = ""
     
     enum AppState {
         case loading
@@ -483,6 +484,25 @@ struct RootView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
+            // Search Bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField("Search decks...", text: $searchText)
+                    .textFieldStyle(.plain)
+                if !searchText.isEmpty {
+                    Button("Clear") {
+                        searchText = ""
+                    }
+                    .foregroundColor(.blue)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(UIColor.systemGray5))
+            .cornerRadius(10)
+            .padding(.horizontal)
+            
             HStack(spacing: 20) {
                 Button("Continue") {
                     if loader.canContinue {
@@ -508,7 +528,7 @@ struct RootView: View {
             
             ScrollView {
                 LazyVStack(spacing: 15) {
-                    ForEach(loader.packs.sorted { $0.name < $1.name }) { pack in
+                    ForEach(filteredPacks) { pack in
                         Button(action: {
                             loader.togglePackSelection(pack.id)
                         }) {
@@ -544,6 +564,17 @@ struct RootView: View {
                     }
                 }
                 .padding(.horizontal)
+            }
+        }
+    }
+    
+    private var filteredPacks: [DeckPack] {
+        let packs = loader.packs.sorted { $0.name < $1.name }
+        if searchText.isEmpty {
+            return packs
+        } else {
+            return packs.filter { pack in
+                pack.name.localizedCaseInsensitiveContains(searchText)
             }
         }
     }
