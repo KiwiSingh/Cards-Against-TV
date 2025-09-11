@@ -158,3 +158,6 @@ crhallberg for his amazing [JSON Against Humanity](https://github.com/crhallberg
 ## License
 
 This is a fan-made, non-commercial project inspired by *Cards Against Humanity*. Please respect the original content’s licensing and attribution requirements.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/kiwisingh)
+
