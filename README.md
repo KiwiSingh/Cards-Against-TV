@@ -106,7 +106,7 @@ The deck file uses a simple format:
 * `black` contains prompt cards with text and a pick value.
 
 ## Screenshots (tvOS)
-![Screenshot 1](https://i.ibb.co/9k6LrMLS/Screenshot-2025-08-31-at-02-26-14.png)
+![Screenshot 1](https://i.ibb.co/xKW5nxRL/Screenshot-2025-09-11-at-07-03-10-FB0-FACA6-6184-4953-AE96-A57-A89-BFE0-C0.png)
 ![Screenshot 2](https://i.ibb.co/G687gZR/Screenshot-2025-08-31-at-02-27-24.png)
 ![Screenshot 3](https://i.ibb.co/8gWHHWjS/Screenshot-2025-08-31-at-02-27-09.png)
 ![Screenshot 4](https://i.ibb.co/fG4SqTs5/Screenshot-2025-08-31-at-02-27-54.png)
@@ -114,7 +114,7 @@ The deck file uses a simple format:
 ![Screenshot 6](https://i.ibb.co/Xx8zmNCs/Screenshot-2025-08-31-at-02-32-40.png)
 
 ## Screenshots (Android TV)
-![Screenshot 1](https://i.ibb.co/gLYP50mn/Screenshot-20250901-001742.png)
+![Screenshot 1](https://i.ibb.co/LXsMkjqx/Screenshot-20250911-071208.png)
 ![Screenshot 2](https://i.ibb.co/sdTG7HL9/Screenshot-20250901-003328.png)
 ![Screenshot 3](https://i.ibb.co/chTDYzXy/Screenshot-20250901-002015.png)
 ![Screenshot 4](https://i.ibb.co/Rp31v0pC/Screenshot-20250901-002105.png)
@@ -122,7 +122,7 @@ The deck file uses a simple format:
 ![Screenshot 6](https://i.ibb.co/C535r3jm/Screenshot-20250901-002406.png)
 
 ## Screenshots (iOS)
-![Screenshot 1](https://i.ibb.co/SwPnTrHN/IMG-3197.png)
+![Screenshot 1](https://i.ibb.co/mCrCGLXq/IMG-3517.png)
 ![Screenshot 2](https://i.ibb.co/7xwVPXH5/IMG-3198.png)
 ![Screenshot 3](https://i.ibb.co/q24rHVF/IMG-3199.png)
 ![Screenshot 4](https://i.ibb.co/1JXbVVJL/IMG-3200.png)
@@ -130,7 +130,7 @@ The deck file uses a simple format:
 ![Screenshot 6](https://i.ibb.co/KH4MnW4/IMG-3202.png)
 
 ## Screenshots (Android)
-![Screenshot 1](https://i.ibb.co/hNRRCqY/Screenshot-20250902-010117.png)
+![Screenshot 1](https://i.ibb.co/QvTVgpxH/Screenshot-20250911-071105.png)
 ![Screenshot 2](https://i.ibb.co/1fyGPQNg/Screenshot-20250902-010732.png)
 ![Screenshot 3](https://i.ibb.co/FLdSNZBv/Screenshot-20250902-010802.png)
 ![Screenshot 4](https://i.ibb.co/23czZcX5/Screenshot-20250902-010832.png)
