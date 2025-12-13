@@ -1,6 +1,6 @@
 # Cards Against TV
 <p align="center">
-  <img src="https://i.ibb.co/BJLF6y5/catv.png" alt="Cards Against TV Logo">
+  <img src="https://i.ibb.co/rGzH1YLS/catv.png" alt="Cards Against TV Logo">
 </p>
 
 
