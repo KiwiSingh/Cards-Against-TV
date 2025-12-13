@@ -373,7 +373,14 @@ struct CardsAgainstTVApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            ZStack {
+                RootView()
+                ParticleOverlay(style: .snow)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+
+            }
+
                 .environmentObject(loader)
                 .environmentObject(game)
                 .onAppear { loader.loadLocal() }

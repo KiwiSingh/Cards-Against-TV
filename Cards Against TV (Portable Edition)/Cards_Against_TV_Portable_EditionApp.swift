@@ -10,7 +10,12 @@ import SwiftUI
 struct Cards_Against_TV_Portable_EditionApp: App {
     var body: some Scene {
         WindowGroup {
-            RootView()
+            ZStack {
+                RootView()
+                ParticleOverlay(style: .snow)
+                    .ignoresSafeArea()
+            }
+
         }
     }
 }

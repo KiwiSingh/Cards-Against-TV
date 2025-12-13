@@ -4,18 +4,20 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
     // REQUIRED FOR KOTLIN 2.0+ WITH COMPOSE
     id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
     namespace = "com.cardsagainsttv"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.cardsagainsttv"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 10
-        versionName = "3.0"
+        targetSdk = 35
+        versionCode = 101
+        versionName = "4.2"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -82,4 +84,10 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("androidx.leanback:leanback:1.0.0")
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0")) // Check for the latest BoM version
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
+    implementation("com.google.android.gms:play-services-games-v2:+") // Or the latest version available
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.firebase:firebase-analytics:21.4.0")
 }

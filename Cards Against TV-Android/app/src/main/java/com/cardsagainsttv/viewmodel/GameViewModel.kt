@@ -221,18 +221,27 @@ class GameViewModel : ViewModel() {
     fun newGame() {
         // Signal that new game was requested
         _newGameRequested.value = true
+    }
 
-        // Reset everything to initial state
+    /**
+     * Reset the game state completely
+     * Called when transitioning back to deck selection to prevent crashes
+     */
+    fun reset() {
+        // First reset all the flows to default values
         _players.value = emptyList()
         _hands.value = emptyList()
-        usedWhite.clear()
-        usedBlack.clear()
         _currentBlack.value = null
         _submissions.value = emptyList()
         _roundJudge.value = 0
         _phase.value = GamePhase.Waiting
         _activePlayer.value = 0
         _error.value = null
+        _newGameRequested.value = false
+
+        // Then clear the mutable sets and references
+        usedWhite.clear()
+        usedBlack.clear()
         deck = null
         allWhite = emptyList()
     }

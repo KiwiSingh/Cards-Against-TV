@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Cards Against TV</string>
+       <string name="google_play_games_app_id">204777340051</string>
+    <string name="game_services_project_id">204777340051</string>
+    <string name="achievement_yer_a_wizard_mate">CgkIk_m47foFEAIQAQ</string>
 </resources>

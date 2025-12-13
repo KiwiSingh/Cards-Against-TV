@@ -410,49 +410,53 @@ struct RootView: View {
     let minPlayers = 3, maxPlayers = 8
 
     var body: some View {
-        NavigationView {
-            VStack(spacing: 30) {
-                Text("Cards Against TV (Portable Edition)")
-                    .font(.largeTitle)
-                    .bold()
-                
-                if let err = loader.errorMessage {
-                    Text("Deck load error: \(err)")
-                        .foregroundColor(.red)
-                        .padding()
-                }
-                if let gameerr = game.error {
-                    Text("Game error: \(gameerr)")
-                        .foregroundColor(.red)
-                        .padding()
-                }
-                
-                Group {
-                    switch appState {
-                    case .loading:
-                        loadingView
-                        
-                    case .deckSelection:
-                        deckSelectionView
-                        
-                    case .playerCount:
-                        playerCountView
-                        
-                    case .playerNames:
-                        playerNamesView
-                        
-                    case .playing:
-                        GameView(appState: $appState)
+        ZStack {
+            NavigationView {
+                VStack(spacing: 30) {
+                    Text("Cards Against TV\n(Jolly Edition)")
+                        .font(.largeTitle)
+                        .bold()
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, alignment: .center)
+
+                    if let err = loader.errorMessage {
+                        Text("Deck load error: \(err)")
+                            .foregroundColor(.red)
+                            .padding()
+                    }
+                    if let gameerr = game.error {
+                        Text("Game error: \(gameerr)")
+                            .foregroundColor(.red)
+                            .padding()
+                    }
+
+                    Group {
+                        switch appState {
+                        case .loading:
+                            loadingView
+                        case .deckSelection:
+                            deckSelectionView
+                        case .playerCount:
+                            playerCountView
+                        case .playerNames:
+                            playerNamesView
+                        case .playing:
+                            GameView(appState: $appState)
+                        }
                     }
                 }
+                .padding()
+                .onAppear { setupInitialState() }
             }
-            .padding()
-            .onAppear {
-                setupInitialState()
-            }
+            .navigationViewStyle(StackNavigationViewStyle())
+
+            // ❄️ Snow overlay (NOW ACTUALLY PRESENT ON iOS)
+            ParticleOverlay(style: .snow)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
         }
-        .navigationViewStyle(StackNavigationViewStyle()) // Force single view on iPad
     }
+
     
     // MARK: - View Components
     

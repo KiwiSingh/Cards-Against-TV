@@ -1,0 +1,8 @@
+# Ignore Google Play Games manager implementation
+/Cards Against TV/Cards Against TV-Android/app/src/main/java/com/cardsagainsttv/manager/GooglePlayGamesManager.kt
+
+# Gradle / Android build outputs
+/build/
+/**/build/
+/.gradle/
+/local.properties
